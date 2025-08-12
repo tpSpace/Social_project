@@ -1,10 +1,10 @@
 import React from 'react';
-import { Home, Search, Bell, Mail, Bookmark, User, MoreHorizontal } from 'lucide-react';
+import { Home, Compass, Bell, Mail, Bookmark, User, MoreHorizontal } from 'lucide-react';
 
 const Sidebar = () => {
   const menuItems = [
     { icon: Home, label: 'Home', active: true },
-    { icon: Search, label: 'Explore' },
+    { icon: Compass, label: 'Explore' },
     { icon: Bell, label: 'Notifications' },
     { icon: Mail, label: 'Messages' },
     { icon: Bookmark, label: 'Bookmarks' },

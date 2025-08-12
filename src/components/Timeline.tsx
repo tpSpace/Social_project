@@ -15,6 +15,7 @@ interface PostData {
 }
 
 const Timeline = () => {
+  // NOTE: In a real application, these posts would be fetched from an API
   const [posts, setPosts] = useState<PostData[]>([
     {
       id: '1',
@@ -69,8 +70,9 @@ const Timeline = () => {
   ]);
 
   const handleNewPost = (content: string) => {
+    // NOTE: In a real application, author, handle, and time would come from authenticated user data and server-side timestamps
     const newPost: PostData = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // NOTE: Use a more robust ID generation (e.g., UUID) in a real application
       author: 'You',
       handle: 'yourhandle',
       time: 'now',
@@ -85,7 +87,7 @@ const Timeline = () => {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="sticky top-0 bg-black bg-opacity-80 backdrop-blur-md border-b border-gray-800 p-4">
+      <div className="sticky top-0 bg-black bg-opacity-80 backdrop-blur-xl border-b border-gray-800 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">Home</h1>
           <Sparkles size={20} className="text-gray-500" />
