@@ -1,15 +1,17 @@
 import React from 'react';
 import { Home, Compass, Bell, Mail, Bookmark, User, MoreHorizontal } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
+  const location = useLocation();
   const menuItems = [
-    { icon: Home, label: 'Home', active: true },
-    { icon: Compass, label: 'Explore' },
-    { icon: Bell, label: 'Notifications' },
-    { icon: Mail, label: 'Messages' },
-    { icon: Bookmark, label: 'Bookmarks' },
-    { icon: User, label: 'Profile' },
-    { icon: MoreHorizontal, label: 'More' }
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: Compass, label: 'Explore', path: '/explore' },
+    { icon: Bell, label: 'Notifications', path: '/notifications' },
+    { icon: Mail, label: 'Messages', path: '/messages' },
+    { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks' },
+    { icon: User, label: 'Profile', path: '/profile' },
+    { icon: MoreHorizontal, label: 'More', path: '#' } // Or handle as a dropdown/modal
   ];
 
   return (
@@ -26,15 +28,15 @@ const Sidebar = () => {
         <ul className="space-y-2">
           {menuItems.map((item, index) => (
             <li key={index}>
-              <a
-                href="#"
+              <Link
+                to={item.path}
                 className={`flex items-center space-x-4 px-3 py-3 rounded-full hover:bg-gray-900 transition-colors ${
-                  item.active ? 'font-bold' : ''
+                  location.pathname === item.path ? 'font-bold' : ''
                 }`}
               >
                 <item.icon size={26} />
                 <span className="text-xl hidden xl:block">{item.label}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -48,15 +50,17 @@ const Sidebar = () => {
 
       {/* User Profile */}
       <div className="mt-auto pt-4">
-        <div className="flex items-center space-x-3 p-3 rounded-full hover:bg-gray-900 cursor-pointer">
-          <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold">U</span>
+        <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold">H</span>
+            </div>
+            <div className="hidden xl:block">
+              <div className="font-bold">Hulk</div>
+              <div className="text-gray-500 text-sm">@hulkmaster</div>
+            </div>
           </div>
-          <div className="hidden xl:block">
-            <div className="font-bold">User Name</div>
-            <div className="text-gray-500 text-sm">@username</div>
-          </div>
-          <MoreHorizontal className="hidden xl:block ml-auto" size={16} />
+          <MoreHorizontal className="hidden xl:block" size={20} />
         </div>
       </div>
     </div>
