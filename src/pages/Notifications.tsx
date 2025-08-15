@@ -1,106 +1,120 @@
-import React from 'react';
-import { Bell } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Bell, Heart, UserPlus, MessageSquare, AtSign } from 'lucide-react';
 
 // Placeholder data for notifications
 const notifications = [
   {
     id: 1,
     type: 'like',
-    user: { name: 'Jane Doe', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
-    post: 'your photo',
+    user: { name: 'Jane Doe', username: 'janedoe', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
+    post: { id: 'post1', excerpt: 'A beautiful sunset...' },
     time: '2 hours ago',
+    read: false,
   },
   {
     id: 2,
     type: 'follow',
-    user: { name: 'John Smith', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
+    user: { name: 'John Smith', username: 'johnsmith', avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d' },
     time: '5 hours ago',
+    read: true,
   },
   {
     id: 3,
     type: 'comment',
-    user: { name: 'Emily White', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d' },
-    comment: '"This looks great!"',
-    post: 'your post',
+    user: { name: 'Emily White', username: 'emilywhite', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d' },
+    comment: { excerpt: '"This looks great!"' },
+    post: { id: 'post2', excerpt: 'My new artwork.' },
     time: '1 day ago',
+    read: false,
   },
   {
     id: 4,
     type: 'mention',
-    user: { name: 'Michael Brown', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026708d' },
-    post: 'a post',
+    user: { name: 'Michael Brown', username: 'michaelbrown', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026708d' },
+    post: { id: 'post3', excerpt: 'Check out this article.' },
     time: '2 days ago',
+    read: true,
   },
   {
     id: 5,
     type: 'like',
-    user: { name: 'Sarah Green', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026709d' },
-    post: 'your comment',
+    user: { name: 'Sarah Green', username: 'sarahgreen', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026709d' },
+    post: { id: 'post1', excerpt: 'A beautiful sunset...' },
     time: '3 days ago',
+    read: true,
   },
 ];
 
-// Icon component for different notification types
 const NotificationIcon = ({ type }: { type: string }) => {
+  const iconProps = { size: 24, className: "mr-4" };
   switch (type) {
-    case 'like':
-      return (
-        <svg className="h-6 w-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-        </svg>
-      );
-    case 'follow':
-      return (
-        <svg className="h-6 w-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 11a1 1 0 011 1v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2h-2a1 1 0 110-2h2v-2a1 1 0 011-1z" />
-        </svg>
-      );
-    case 'comment':
-      return (
-        <svg className="h-6 w-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
-        </svg>
-      );
-    case 'mention':
-      return (
-        <svg className="h-6 w-6 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-        </svg>
-      );
-    default:
-      return null;
+    case 'like': return <Heart {...iconProps} className={`${iconProps.className} text-red-500`} />;
+    case 'follow': return <UserPlus {...iconProps} className={`${iconProps.className} text-blue-500`} />;
+    case 'comment': return <MessageSquare {...iconProps} className={`${iconProps.className} text-green-500`} />;
+    case 'mention': return <AtSign {...iconProps} className={`${iconProps.className} text-purple-500`} />;
+    default: return <Bell {...iconProps} className={`${iconProps.className} text-gray-400`} />;
   }
 };
 
-const Notifications = () => {
-  return (
-    <div className="bg-black min-h-screen">
-      <div className="container mx-auto">
-        <div className="border-b border-gray-200 flex items-center">
-          <Bell className='text-gray-200 ml-4' />
-          <h1 className="text-2xl font-bold p-4">Notifications</h1>
+const NotificationItem = ({ notification }: { notification: any }) => (
+  <li className={`p-4 flex items-start space-x-4 border-b border-gray-800 transition-colors duration-200 ${notification.read ? 'bg-gray-900' : 'bg-gray-800'} hover:bg-gray-700 cursor-pointer`}>
+    <NotificationIcon type={notification.type} />
+    <div className="flex-1">
+      <div className="flex items-center mb-1">
+        <img src={notification.user.avatar} alt={notification.user.name} className="w-10 h-10 rounded-full mr-3" />
+        <div>
+          <p className="text-gray-200">
+            <span className="font-bold text-white">{notification.user.name}</span>
+            <span className="text-gray-400"> @{notification.user.username}</span>
+          </p>
+          <p className="text-sm text-gray-500">{notification.time}</p>
         </div>
-        <ul className="divide-y divide-gray-200 bg-gray-900">
-          {notifications.map((notification) => (
-            <li key={notification.id} className="p-4 flex items-start space-x-4 hover:bg-gray-700 cursor-pointer">
-              <div className="mt-1">
-                <NotificationIcon type={notification.type} />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <img src={notification.user.avatar} alt={notification.user.name} className="w-8 h-8 rounded-full" />
-                </div>
-                <p className="text-gray-400 mt-2">
-                  <span className="font-bold text-white">{notification.user.name}</span>
-                  {notification.type === 'like' && ` liked ${notification.post}.`}
-                  {notification.type === 'follow' && ' started following you.'}
-                  {notification.type === 'comment' && ` commented: ${notification.comment} on ${notification.post}.`}
-                  {notification.type === 'mention' && ` mentioned you in ${notification.post}.`}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">{notification.time}</p>
-              </div>
-            </li>
+      </div>
+      <div className="text-gray-300 ml-13">
+        {notification.type === 'like' && `liked your post: "${notification.post.excerpt}"`}
+        {notification.type === 'follow' && 'started following you.'}
+        {notification.type === 'comment' && `commented on your post: ${notification.comment.excerpt}`}
+        {notification.type === 'mention' && `mentioned you in a post: "${notification.post.excerpt}"`}
+      </div>
+    </div>
+    {!notification.read && <div className="w-3 h-3 bg-blue-500 rounded-full self-center"></div>}
+  </li>
+);
+
+const Notifications = () => {
+  const [filter, setFilter] = useState('All');
+
+  const filteredNotifications = useMemo(() => {
+    if (filter === 'All') return notifications;
+    return notifications.filter(n => n.type === filter.toLowerCase().slice(0, -1));
+  }, [filter]);
+
+  const tabs = ['All', 'Likes', 'Comments', 'Follows', 'Mentions'];
+
+  return (
+    <div className="bg-black min-h-screen text-white">
+      <div className="container mx-auto max-w-2xl">
+        <div className="p-4 sticky top-0 bg-black bg-opacity-80 backdrop-blur-sm z-10">
+          <h1 className="text-2xl font-bold">Notifications</h1>
+        </div>
+        
+        <div className="border-b border-gray-800 flex justify-around">
+          {tabs.map(tab => (
+            <button 
+              key={tab}
+              onClick={() => setFilter(tab)}
+              className={`py-3 px-4 text-center w-full font-semibold transition-colors duration-200 
+                ${filter === tab 
+                  ? 'text-blue-400 border-b-2 border-blue-400' 
+                  : 'text-gray-500 hover:bg-gray-800'}`}>
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <ul>
+          {filteredNotifications.map(notification => (
+            <NotificationItem key={notification.id} notification={notification} />
           ))}
         </ul>
       </div>
