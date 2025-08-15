@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PostComposer from './PostComposer';
 import Post from './Post';
 import { Sparkles } from 'lucide-react';
@@ -21,9 +21,10 @@ interface TimelineProps {
   onNewPost?: (content: string) => void;
   showComposer?: boolean;
   showTabs?: boolean;
+  composerAvatar?: string;
 }
 
-const Timeline: React.FC<TimelineProps> = ({ title, posts, onNewPost, showComposer = false, showTabs = false }) => {
+const Timeline: React.FC<TimelineProps> = ({ title, posts, onNewPost, showComposer = false, showTabs = false, composerAvatar = '' }) => {
   return (
     <div className="w-full">
       {/* Header */}
@@ -45,7 +46,7 @@ const Timeline: React.FC<TimelineProps> = ({ title, posts, onNewPost, showCompos
         )}
       </div>
       
-      {showComposer && onNewPost && <PostComposer onPost={onNewPost} />}
+      {showComposer && onNewPost && <PostComposer onPost={onNewPost} avatar={composerAvatar} />}
       
       <div className="divide-y divide-gray-800">
         {posts.map((post) => (

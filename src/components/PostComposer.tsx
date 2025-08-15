@@ -3,9 +3,10 @@ import { Image, MapPin, Smile, Calendar } from 'lucide-react';
 
 interface PostComposerProps {
   onPost: (content: string) => void;
+  avatar: string;
 }
 
-const PostComposer: React.FC<PostComposerProps> = ({ onPost }) => {
+const PostComposer: React.FC<PostComposerProps> = ({ onPost, avatar }) => {
   const [content, setContent] = useState('');
   const maxLength = 280;
 
@@ -21,9 +22,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPost }) => {
     <div className="border-b border-gray-800 p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex space-x-4">
-          <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold">U</span>
-          </div>
+          <img src={avatar} alt="Your avatar" className="w-12 h-12 rounded-full object-cover" />
           <div className="flex-1">
             <textarea
               value={content}
@@ -34,7 +33,6 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPost }) => {
               maxLength={maxLength}
             />
             
-            {/* Privacy setting */}
             <div className="flex items-center text-blue-500 text-sm mb-4">
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>

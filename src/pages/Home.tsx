@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import Timeline from '../components/Timeline';
 
+const currentUser = {
+    name: 'PhatMotSach',
+    handle: 'phatmotsach',
+    avatar: 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_14_60037b48e5.jpg' // A consistent avatar for the user
+};
+
 const initialPosts = [
     {
       id: '1',
@@ -43,19 +49,28 @@ const Home = () => {
     const handleNewPost = (content: string) => {
         const newPost = {
           id: Date.now().toString(),
-          author: 'You',
-          handle: 'yourhandle',
+          author: currentUser.name,
+          handle: currentUser.handle,
           time: 'now',
           content,
           likes: 0,
           comments: 0,
           retweets: 0,
-          avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d'
+          avatar: currentUser.avatar
         };
         setPosts([newPost, ...posts]);
       };
 
-    return <Timeline title="Home" posts={posts} onNewPost={handleNewPost} showComposer showTabs />;
+    return (
+        <Timeline 
+            title="Home" 
+            posts={posts} 
+            onNewPost={handleNewPost} 
+            showComposer 
+            showTabs 
+            composerAvatar={currentUser.avatar}
+        />
+    );
 };
 
 export default Home;
