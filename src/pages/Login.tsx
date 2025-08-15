@@ -1,49 +1,64 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Login</h2>
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="max-w-md w-full bg-black p-8 rounded-2xl shadow-lg">
+        <div className="text-center mb-8">
+          <div className="inline-block w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
+            <span className="text-black font-bold text-2xl">H</span>
+          </div>
+          <h1 className="text-3xl font-bold">Sign in to Hulk-Hub</h1>
+        </div>
+
+        <div className="space-y-4">
+          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
+            Sign in with Google
+          </button>
+          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
+            Sign in with Apple
+          </button>
+        </div>
+
+        <div className="flex items-center my-6">
+          <hr className="flex-grow border-gray-700" />
+          <span className="mx-4 text-gray-500">or</span>
+          <hr className="flex-grow border-gray-700" />
+        </div>
+
         <form className="space-y-6">
           <div>
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email address
-            </label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              type="text"
+              placeholder="Phone, email, or username"
+              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
             <input
-              id="password"
-              name="password"
               type="password"
-              autoComplete="current-password"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Password"
+              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Sign in
-            </button>
-          </div>
+          <button className="w-full bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition-colors">
+            Sign In
+          </button>
         </form>
+
+        <div className="mt-6 text-center">
+          <Link to="#" className="text-blue-500 hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+
+        <div className="mt-6 text-center text-gray-500">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-blue-500 hover:underline">
+            Sign up
+          </Link>
+        </div>
       </div>
     </div>
   );

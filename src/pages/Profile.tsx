@@ -171,25 +171,25 @@ const Profile = () => {
             {isEditing && (
               <form onSubmit={handleSave} className="mt-4 space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-lg font-medium">Name</label>
+                  <label htmlFor="name" className="block text-xl font-medium">Name</label>
                   <input
                     type="text"
                     id="name"
                     name="name"
                     value={editedUser.name}
                     onChange={handleChange}
-                    className="mt-1 block w-full px-3 py-2 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="username" className="block text-lg font-medium">Username</label>
+                  <label htmlFor="username" className="block text-xl font-medium">Username</label>
                   <input
                     type="text"
                     id="username"
                     name="username"
                     value={editedUser.username}
                     onChange={handleChange}
-                    className="mt-1 block w-full px-3 py-2 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
                 </div>
               </form>

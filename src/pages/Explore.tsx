@@ -1,74 +1,85 @@
-import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
+import React from 'react';
+import { Search, Settings2 } from 'lucide-react';
+import TrendItem from '../components/TrendItem';
+import FollowSuggestionItem from '../components/FollowSuggestionItem';
 
-// Placeholder data for the explore grid
+// Placeholder data
+const trends = [
+  { category: 'Trending in Technology', topic: 'Hulk-Hub', posts: '125K posts' },
+  { category: 'Trending', topic: 'Social Media', posts: '89.2K posts' },
+  { category: 'Technology · Trending', topic: 'React', posts: '45.8K posts' },
+  { category: 'Trending in Vietnam', topic: 'Tech News', posts: '23.1K posts' },
+  { category: 'Music · Trending', topic: '#AlbumOfTheYear', posts: '1M posts' },
+];
+
+const whoToFollow = [
+    { name: 'Bruce Banner', username: 'hulkscientist', verified: true, avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqx0cT1HzvxSTfdYqsGaBkrZGHLsXrfiV6qxA0DhpVwdQARNRjA6lTbNQwRM2KqD9OZkw&usqp=CAU' },
+    { name: 'Tony Stark', username: 'ironman', verified: true, avatar: 'https://media.istockphoto.com/id/1360554439/vi/anh/%C4%91%E1%BA%A3o-nhi%E1%BB%87t-%C4%91%E1%BB%9Bi-maldives.jpg?s=612x612&w=0&k=20&c=pqWxvBFhn0_mJQF-oNyiDS56iahHule2vZmmVbjc_TA=' },
+    { name: 'Peter Parker', username: 'spiderman', verified: false, avatar: 'https://picsum.photos/seed/picsum/400/400' },
+];
+
 const explorePosts = [
-  { id: 1, imageUrl: 'https://picsum.photos/seed/picsum/400/400', likes: 120, comments: 15, description: 'A beautiful landscape.' },
-  { id: 2, imageUrl: 'https://picsum.photos/seed/consectetur/400/400', likes: 256, comments: 32, description: 'Exploring the city streets.' },
-  { id: 3, imageUrl: 'https://picsum.photos/seed/adipiscing/400/400', likes: 98, comments: 8, description: 'Delicious food from a local cafe.' },
-  { id: 4, imageUrl: 'https://picsum.photos/seed/elit/400/400', likes: 432, comments: 55, description: 'A stunning sunset over the mountains.' },
-  { id: 5, imageUrl: 'https://picsum.photos/seed/sed/400/400', likes: 175, comments: 21, description: 'Cute puppy playing in the park.' },
-  { id: 6, imageUrl: 'https://picsum.photos/seed/eiusmod/400/400', likes: 301, comments: 40, description: 'Architectural marvels.' },
-  { id: 7, imageUrl: 'https://picsum.photos/seed/tempor/400/400', likes: 88, comments: 12, description: 'A peaceful walk in the forest.' },
-  { id: 8, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqx0cT1HzvxSTfdYqsGaBkrZGHLsXrfiV6qxA0DhpVwdQARNRjA6lTbNQwRM2KqD9OZkw&usqp=CAU', likes: 521, comments: 78, description: 'Winter wonderland.' },
-  { id: 9, imageUrl: 'https://media.istockphoto.com/id/1360554439/vi/anh/%C4%91%E1%BA%A3o-nhi%E1%BB%87t-%C4%91%E1%BB%9Bi-maldives.jpg?s=612x612&w=0&k=20&c=pqWxvBFhn0_mJQF-oNyiDS56iahHule2vZmmVbjc_TA=', likes: 210, comments: 25, description: 'Tropical paradise.' },
-  { id: 10, imageUrl: 'https://picsum.photos/seed/dolore/400/400', likes: 643, comments: 99, description: 'Vintage car show.' },
-  { id: 11, imageUrl: 'https://picsum.photos/seed/magna/400/400', likes: 111, comments: 11, description: 'A quiet library scene.' },
-  { id: 12, imageUrl: 'https://picsum.photos/seed/aliqua/400/400', likes: 222, comments: 22, description: 'Street art and graffiti.' },
+    { id: 1, imageUrl: 'https://picsum.photos/seed/picsum/400/400', likes: 120, comments: 15, description: 'A beautiful landscape.' },
+    { id: 2, imageUrl: 'https://picsum.photos/seed/consectetur/400/400', likes: 256, comments: 32, description: 'Exploring the city streets.' },
+    { id: 3, imageUrl: 'https://picsum.photos/seed/adipiscing/400/400', likes: 98, comments: 8, description: 'Delicious food from a local cafe.' },
+    { id: 4, imageUrl: 'https://picsum.photos/seed/elit/400/400', likes: 432, comments: 55, description: 'A stunning sunset over the mountains.' },
 ];
 
 const Explore = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredPosts = useMemo(() => {
-    if (!searchTerm) return explorePosts;
-    return explorePosts.filter(post => 
-      post.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
-
   return (
-    <div className="bg-black min-h-screen text-white">
-      <div className="container mx-auto p-4">
-        {/* Search Bar */}
-        <div className="mb-6 relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="text-gray-400" size={20} />
-          </div>
+    <div className="w-full">
+      {/* Header */}
+      <div className="sticky top-0 bg-black bg-opacity-80 backdrop-blur-xl border-b border-gray-800 p-3 flex items-center space-x-4 z-10">
+        <div className="relative flex-grow">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
           <input
             type="text"
-            placeholder="Search by description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 text-gray-100 bg-gray-900 border border-gray-700 rounded-full 
-               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-               transition-all duration-300 ease-in-out placeholder:text-gray-500"
+            placeholder="Search Hulk-Hub"
+            className="w-full bg-gray-900 text-white rounded-full py-2 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+        <button className="text-gray-400 hover:text-white">
+          <Settings2 size={20} />
+        </button>
+      </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredPosts.map(post => (
-            <div key={post.id} className="relative group aspect-w-1 aspect-h-1 overflow-hidden rounded-lg">
-              <img src={post.imageUrl} alt={post.description} className="w-full h-full object-cover rounded-lg shadow-md group-hover:scale-110 transition-transform duration-500 ease-in-out" />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center rounded-lg">
-                <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-6">
-                  <span className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="white" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    {post.likes}
-                  </span>
-                  <span className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="white" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    {post.comments}
-                  </span>
-                </div>
-              </div>
+      {/* Tabs */}
+      <div className="border-b border-gray-800 flex">
+        <button className="flex-1 text-center py-3 font-bold border-b-2 border-blue-500">For You</button>
+        <button className="flex-1 text-center py-3 text-gray-500 hover:bg-gray-900">Trending</button>
+        <button className="flex-1 text-center py-3 text-gray-500 hover:bg-gray-900">News</button>
+        <button className="flex-1 text-center py-3 text-gray-500 hover:bg-gray-900">Sports</button>
+      </div>
+
+      {/* Main Content */}
+      <div className="divide-y divide-gray-800">
+        {/* Trends for you */}
+        <div className="p-4">
+          <h2 className="text-2xl font-bold mb-2">Trends for you</h2>
+          <div className="space-y-1">
+            {trends.map((trend) => (
+              <TrendItem key={trend.topic} {...trend} />
+            ))}
+            <button className="text-blue-500 hover:underline p-3">Show more</button>
+          </div>
+        </div>
+
+        {/* Image grid */}
+        <div className="py-4">
+            <div className="grid grid-cols-2 gap-1">
+                {explorePosts.map(p => <img key={p.id} src={p.imageUrl} className="w-full h-full object-cover"/>)}
             </div>
-          ))}
+        </div>
+
+        {/* Who to follow */}
+        <div className="p-4">
+          <h2 className="text-2xl font-bold mb-2">Who to follow</h2>
+          <div className="space-y-1">
+            {whoToFollow.map((user) => (
+              <FollowSuggestionItem key={user.username} {...user} />
+            ))}
+            <button className="text-blue-500 hover:underline p-3">Show more</button>
+          </div>
         </div>
       </div>
     </div>

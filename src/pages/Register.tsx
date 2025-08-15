@@ -1,81 +1,53 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Register</h2>
-        <form className="space-y-6">
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="max-w-md w-full bg-black p-8 rounded-2xl shadow-lg">
+        <div className="text-center mb-8">
+          <div className="inline-block w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
+            <span className="text-black font-bold text-2xl">H</span>
+          </div>
+          <h1 className="text-3xl font-bold">Create your account</h1>
+        </div>
+
+        <form className="space-y-4">
           <div>
-            <label
-              htmlFor="username"
-              className="text-sm font-medium text-gray-700"
-            >
-              Username
-            </label>
             <input
-              id="username"
-              name="username"
               type="text"
-              autoComplete="username"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Name"
+              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email address
-            </label>
             <input
-              id="email"
-              name="email"
               type="email"
-              autoComplete="email"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Email"
+              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
             <input
-              id="password"
-              name="password"
               type="password"
-              autoComplete="new-password"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Password"
+              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div>
-            <label
-              htmlFor="confirm-password"
-              className="text-sm font-medium text-gray-700"
-            >
-              Confirm Password
-            </label>
-            <input
-              id="confirm-password"
-              name="confirm-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
+          <div className="text-sm text-gray-500">
+            By signing up, you agree to the <Link to="#" className="text-blue-500 hover:underline">Terms of Service</Link> and <Link to="#" className="text-blue-500 hover:underline">Privacy Policy</Link>, including <Link to="#" className="text-blue-500 hover:underline">Cookie Use</Link>.
           </div>
-          <div>
-            <button
-              type="submit"
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Sign up
-            </button>
-          </div>
+          <button className="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-full hover:bg-blue-600 transition-colors">
+            Sign Up
+          </button>
         </form>
+
+        <div className="mt-6 text-center text-gray-500">
+          Have an account already?{' '}
+          <Link to="/login" className="text-blue-500 hover:underline">
+            Log in
+          </Link>
+        </div>
       </div>
     </div>
   );
