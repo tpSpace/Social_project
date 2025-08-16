@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Timeline from '../components/Timeline';
+import { addPost, getAllPosts, seedPosts, deletePost } from '../utils/db';
 
 const currentUser = {
     name: 'PhatMotSach',
@@ -7,59 +8,64 @@ const currentUser = {
     avatar: 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_14_60037b48e5.jpg' // A consistent avatar for the user
 };
 
-const initialPosts = [
-    {
-      id: '1',
-      author: 'Bruce Banner',
-      handle: 'hulkscientist',
-      time: '2h',
-      content: 'Just launched Hulk-Hub! A place where everyone can share their thoughts and connect with the community. The future of social networking is here! 🚀',
-      likes: 1247,
-      comments: 89,
-      retweets: 234,
-      avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqx0cT1HzvxSTfdYqsGaBkrZGHLsXrfiV6qxA0DhpVwdQARNRjA6lTbNQwRM2KqD9OZkw&usqp=CAU'
-    },
-    {
-      id: '2',
-      author: 'Tony Stark',
-      handle: 'ironman',
-      time: '4h',
-      content: 'AI integration in social platforms is revolutionary. The technology behind Hulk-Hub\'s recommendation system is absolutely brilliant. Excited to see where this goes! 🤖✨',
-      likes: 892,
-      comments: 156,
-      retweets: 178,
-      avatar: 'https://media.istockphoto.com/id/1360554439/vi/anh/%C4%91%E1%BA%A3o-nhi%E1%BB%87t-%C4%91%E1%BB%9Bi-maldives.jpg?s=612x612&w=0&k=20&c=pqWxvBFhn0_mJQF-oNyiDS56iahHule2vZmmVbjc_TA='
-    },
-    {
-      id: '3',
-      author: 'Natasha Romanoff',
-      handle: 'blackwidow',
-      time: '6h',
-      content: 'Privacy and security should always be the foundation of any social platform. Impressed by the encryption standards implemented here. Well done team! 🔒',
-      likes: 743,
-      comments: 92,
-      retweets: 167,
-      avatar: 'https://picsum.photos/seed/eiusmod/400/400'
-    },
-];
-
 const Home = () => {
-    const [posts, setPosts] = useState(initialPosts);
+    const [posts, setPosts] = useState<any[]>([]);
 
-    const handleNewPost = (content: string) => {
-        const newPost = {
-          id: Date.now().toString(),
-          author: currentUser.name,
-          handle: currentUser.handle,
-          time: 'now',
-          content,
-          likes: 0,
-          comments: 0,
-          retweets: 0,
-          avatar: currentUser.avatar
+    useEffect(() => {
+        const fetchAndSeedPosts = async () => {
+            await seedPosts(); // Seed posts if DB is empty
+            const dbPosts = await getAllPosts();
+            const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+            setPosts(sortedPosts);
         };
-        setPosts([newPost, ...posts]);
-      };
+        fetchAndSeedPosts();
+    }, []);
+
+    const handleNewPost = async (content: string, imageFile?: File) => {
+        let imageUrl: string | undefined;
+        if (imageFile) {
+            imageUrl = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    resolve(reader.result as string);
+                };
+                reader.readAsDataURL(imageFile);
+            });
+        }
+
+        const newPost = {
+            id: Date.now(),
+            author: currentUser.name,
+            handle: currentUser.handle,
+            time: 'now',
+            content,
+            likes: 0,
+            comments: 0,
+            retweets: 0,
+            avatar: currentUser.avatar,
+            image: imageUrl, // Store the Data URL string
+        };
+        await addPost(newPost);
+        const dbPosts = await getAllPosts();
+        const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+        setPosts(sortedPosts);
+    };
+
+    const handleDeletePost = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this post?')) {
+            await deletePost(Number(id));
+            const dbPosts = await getAllPosts();
+            const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+            setPosts(sortedPosts);
+        }
+    };
+
+    const handleEditPost = async (updatedPost: any) => {
+        await updatedPost(updatedPost);
+        const dbPosts = await getAllPosts();
+        const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+        setPosts(sortedPosts);
+    };
 
     return (
         <Timeline 
@@ -69,8 +75,15 @@ const Home = () => {
             showComposer 
             showTabs 
             composerAvatar={currentUser.avatar}
+            currentUserHandle={currentUser.handle}
+            onDeletePost={handleDeletePost}
+            onEditPost={handleEditPost}
         />
     );
 };
 
 export default Home;
+
+
+
+

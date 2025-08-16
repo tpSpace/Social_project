@@ -1,20 +1,44 @@
-import React, { useState } from 'react';
-import { Image, MapPin, Smile, Calendar } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Image, Trash2, Smile, Calendar, X } from 'lucide-react';
 
 interface PostComposerProps {
-  onPost: (content: string) => void;
+  onPost: (content: string, image?: File) => void;
   avatar: string;
 }
 
 const PostComposer: React.FC<PostComposerProps> = ({ onPost, avatar }) => {
   const [content, setContent] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const maxLength = 280;
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearContent = () => {
+    setContent('');
+    setImageFile(null);
+    setImagePreview(null);
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (content.trim()) {
-      onPost(content);
-      setContent('');
+    if (content.trim() || imageFile) {
+      onPost(content, imageFile || undefined);
+      clearContent();
     }
   };
 
@@ -32,32 +56,33 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPost, avatar }) => {
               rows={3}
               maxLength={maxLength}
             />
-            
-            <div className="flex items-center text-blue-500 text-sm mb-4">
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-              Everyone can reply
-            </div>
+
+            {imagePreview && (
+              <div className="relative my-4 z-0">
+                <img src={imagePreview} alt="Selected preview" className="rounded-2xl max-h-80 w-full object-cover" />
+                <button 
+                  type="button"
+                  onClick={() => { setImagePreview(null); setImageFile(null); if(fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="absolute top-2 right-2 bg-black bg-opacity-75 rounded-full p-1.5 hover:bg-opacity-90 transition-colors"
+                >
+                  <X size={18} className="text-white" />
+                </button>
+              </div>
+            )}
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <input type="file" accept="image/*" onChange={handleImageSelect} ref={fileInputRef} className="hidden" />
                 <button
                   type="button"
+                  onClick={() => fileInputRef.current?.click()}
                   className="text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 p-2 rounded-full transition-colors"
                 >
                   <Image size={20} />
                 </button>
                 <button
                   type="button"
-                  className="text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 p-2 rounded-full transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2h4a1 1 0 0 1 0 2h-1v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6H3a1 1 0 1 1 0-2h4zM6 6v14h12V6H6zm3-2V3h6v1H9z"/>
-                  </svg>
-                </button>
-                <button
-                  type="button"
+                  onClick={() => alert('Emoji picker coming soon!')}
                   className="text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 p-2 rounded-full transition-colors"
                 >
                   <Smile size={20} />
@@ -68,12 +93,15 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPost, avatar }) => {
                 >
                   <Calendar size={20} />
                 </button>
-                <button
-                  type="button"
-                  className="text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 p-2 rounded-full transition-colors"
-                >
-                  <MapPin size={20} />
-                </button>
+                {(content || imageFile) && (
+                    <button
+                    type="button"
+                    onClick={clearContent}
+                    className="text-red-500 hover:bg-red-500 hover:bg-opacity-10 p-2 rounded-full transition-colors"
+                    >
+                    <Trash2 size={20} />
+                    </button>
+                )}
               </div>
               <div className="flex items-center space-x-4">
                 {content.length > 0 && (
@@ -89,7 +117,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPost, avatar }) => {
                 )}
                 <button
                   type="submit"
-                  disabled={!content.trim()}
+                  disabled={!content.trim() && !imageFile}
                   className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white px-6 py-1.5 rounded-full font-bold transition-colors"
                 >
                   Post

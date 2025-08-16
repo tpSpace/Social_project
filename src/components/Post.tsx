@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, BadgeCheck } from 'lucide-react'; // Added BadgeCheck
 
-interface PostProps {
+interface PostData {
   id: string;
   author: string;
   handle: string;
@@ -11,13 +11,25 @@ interface PostProps {
   comments: number;
   retweets: number;
   avatar?: string;
+  image?: string;
 }
 
-const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, likes, comments, retweets }) => {
+interface PostProps extends PostData {
+  isCurrentUserPost?: boolean; // New prop to indicate if it's the current user's post
+  onDeletePost?: (id: string) => void; // New prop for delete functionality
+  onEditPost?: (updatedPost: PostData) => void; // New prop for edit functionality
+}
+
+const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, likes, comments, retweets, image, isCurrentUserPost, onDeletePost, onEditPost }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isRetweeted, setIsRetweeted] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(likes);
   const [currentRetweets, setCurrentRetweets] = useState(retweets);
+  const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
+  const [isEditing, setIsEditing] = useState(false); // State for edit mode
+  const [editedContent, setEditedContent] = useState(content); // State for edited content
+  const [editedImage, setEditedImage] = useState<string | undefined>(image); // State for edited image
+  const [newImageFile, setNewImageFile] = useState<File | undefined>(undefined); // State for new image file
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -27,6 +39,77 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
   const handleRetweet = () => {
     setIsRetweeted(!isRetweeted);
     setCurrentRetweets(isRetweeted ? currentRetweets - 1 : currentRetweets + 1);
+  };
+
+  const handleDelete = () => {
+    if (onDeletePost) {
+      onDeletePost(id);
+    }
+    setShowDropdown(false);
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setShowDropdown(false);
+  };
+
+  const handleSaveEdit = async () => {
+    let imageUrlToSave = editedImage;
+    if (newImageFile) {
+      imageUrlToSave = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(newImageFile);
+      });
+    }
+
+    const updatedPost = {
+      id,
+      author,
+      handle,
+      time,
+      content: editedContent,
+      likes,
+      comments,
+      retweets,
+      avatar,
+      image: imageUrlToSave,
+    };
+
+    console.log('Saving post with image URL:', imageUrlToSave); // Debugging line
+
+    if (onEditPost) {
+      onEditPost(updatedPost);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedContent(content);
+    setEditedImage(image);
+    setNewImageFile(undefined);
+    setIsEditing(false);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewImageFile(e.target.files[0]);
+      setEditedImage(URL.createObjectURL(e.target.files[0])); // For immediate preview
+    }
+  };
+
+  let dropdownTimeout: ReturnType<typeof setTimeout>; // Declare a variable to hold the timeout ID
+
+  const handleDropdownMouseLeave = () => {
+    dropdownTimeout = setTimeout(() => {
+      setShowDropdown(false);
+    }, 200); // 200ms delay
+  };
+
+  const handleDropdownMouseEnter = () => {
+    clearTimeout(dropdownTimeout);
   };
 
   return (
@@ -51,12 +134,82 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
             <span className="text-gray-400 text-sm">@{handle}</span>
             <span className="text-gray-500 text-sm">·</span>
             <span className="text-gray-500 text-sm">{time}</span>
-            <button className="ml-auto text-gray-500 hover:text-gray-300 hover:bg-gray-800 p-1 rounded-full transition-colors">
-              <MoreHorizontal size={16} />
-            </button>
+            {isCurrentUserPost && (
+              <div className="relative ml-auto" onMouseLeave={handleDropdownMouseLeave} onMouseEnter={handleDropdownMouseEnter}>
+                <button
+                  className="text-gray-500 hover:text-gray-300 hover:bg-gray-800 p-1 rounded-full transition-colors"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-40 bg-gray-800 rounded-md shadow-lg z-10">
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700"
+                      onClick={handleEdit}
+                    >
+                      Edit Post
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-700"
+                      onClick={handleDelete}
+                    >
+                      Delete Post
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          <p className="text-white text-base leading-normal mb-3 break-words whitespace-pre-wrap">{content}</p>
+          {isEditing ? (
+            <div className="space-y-3">
+              <textarea
+                className="w-full p-2 bg-gray-900 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                rows={3}
+              />
+              {editedImage && (
+                <div className="my-2 rounded-2xl border border-gray-800 overflow-hidden">
+                  <img src={editedImage} alt="Post image preview" className="w-full h-auto object-cover" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="block w-full text-sm text-gray-400
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  className="px-4 py-2 text-sm font-semibold rounded-full bg-gray-700 text-white hover:bg-gray-600"
+                  onClick={handleCancelEdit}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 text-sm font-semibold rounded-full bg-blue-500 text-white hover:bg-blue-600"
+                  onClick={handleSaveEdit}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-white text-base leading-normal mb-3 break-words whitespace-pre-wrap">{content}</p>
+          )}
+
+          {!isEditing && image && (
+            <div className="my-4 rounded-2xl border border-gray-800 overflow-hidden">
+                <img src={image} alt="Post image" className="w-full h-auto object-cover" />
+            </div>
+            )}
 
           <div className="flex items-center justify-between max-w-md text-gray-500">
             <button className="flex items-center space-x-2 hover:text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 p-2 rounded-full transition-colors group">
