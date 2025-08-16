@@ -8,6 +8,9 @@ const Profile = () => {
     bio: 'Xin chào, tớ là Phát, tớ thích học tập và tìm hiểu những thứ mới mẻ, rất mong được làm quen với mọi người nhé!',
     avatar: 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_14_60037b48e5.jpg',
     backgroundAvatar: 'https://c4.wallpaperflare.com/wallpaper/410/867/750/vector-forest-sunset-forest-sunset-forest-wallpaper-preview.jpg',
+    occupation: 'Software Engineer',
+    location: 'Ho Chi Minh City',
+    joinDate: '2025-08-16',
     stats: {
       following: 750,
       followers: 140,
@@ -142,14 +145,38 @@ const Profile = () => {
               <p className="text-gray-500">@{user.username}</p>
             </div>
 
-            <div className="mt-6 flex justify-start space-x-8">
-              <div className="text-center">
-                <p className="font-bold text-xl">{user.stats.following}</p>
-                <p className="text-gray-400">Following</p>
+            <div className="mt-4 flex flex-col space-y-2 text-gray-400 text-lg">
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>{user.occupation}</span>
               </div>
-              <div className="text-center">
-                <p className="font-bold text-xl">{user.stats.followers}</p>
-                <p className="text-gray-400">Followers</p>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>{user.location}</span>
+              </div>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>
+                  Joined {new Date(user.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-start space-x-8">
+              <div className="text-center flex">
+                <p className="font-bold text-lg">{user.stats.following}</p>
+                <p className="text-gray-400 text-lg ml-1">Following</p>
+              </div>
+              <div className="text-center flex">
+                <p className="font-bold text-lg">{user.stats.followers}</p>
+                <p className="text-gray-400 text-lg ml-1">Followers</p>
               </div>
             </div>
 
@@ -188,6 +215,39 @@ const Profile = () => {
                     id="username"
                     name="username"
                     value={editedUser.username}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="occupation" className="block text-xl font-medium">Occupation</label>
+                  <input
+                    type="text"
+                    id="occupation"
+                    name="occupation"
+                    value={editedUser.occupation}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="location" className="block text-xl font-medium">Location</label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={editedUser.location}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="joinDate" className="block text-xl font-medium">Join Date</label>
+                  <input
+                    type="date"
+                    id="joinDate"
+                    name="joinDate"
+                    value={editedUser.joinDate}
                     onChange={handleChange}
                     className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />

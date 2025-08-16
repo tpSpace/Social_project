@@ -1,8 +1,28 @@
 import React, { useState } from 'react';
 import { Heart, User, MessageSquare, AtSign, Settings2, Star } from 'lucide-react';
 
+// Define interfaces for our data structures
+interface UserProfile {
+    name: string;
+    avatar: string;
+    bio?: string;
+}
+
+interface PostInfo {
+    excerpt: string;
+}
+
+interface Notification {
+    id: number;
+    type: 'like' | 'follow' | 'reply' | 'mention';
+    user: UserProfile;
+    post?: PostInfo;
+    reply?: PostInfo;
+    time: string;
+}
+
 // Placeholder data for notifications
-const notificationsData = [
+const notificationsData: Notification[] = [
   {
     id: 1,
     type: 'like',
@@ -30,6 +50,13 @@ const notificationsData = [
     post: { excerpt: 'Just saw the new Hulk-Hub feature, @yourhandle you should check it out.' },
     time: '2d',
   },
+  {
+    id: 5,
+    type: 'like',
+    user: { name: 'Maria Chan', avatar: 'https://wallpapers.com/images/high/anime-profile-picture-jioug7q8n43yhlwn.jpg'},
+    post: { excerpt: 'わあ！とてもきれいですね。好きです！ - Wow! Its so beautiful. I like it!'},
+    time: '3h',
+  }
 ];
 
 const NotificationIcon = ({ type }: { type: string }) => {
@@ -42,8 +69,7 @@ const NotificationIcon = ({ type }: { type: string }) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const NotificationItem = ({ notification }: { notification: any }) => {
+const NotificationItem = ({ notification }: { notification: Notification }) => {
     const contentText = notification.post?.excerpt || notification.reply?.excerpt;
 
     return (
@@ -86,6 +112,21 @@ const Notifications = () => {
   const [filter, setFilter] = useState('All');
   const tabs = ['All', 'Verified', 'Mentions'];
 
+  const parseTime = (time: string): number => {
+    const value = parseInt(time.slice(0, -1));
+    const unit = time.slice(-1);
+    switch (unit) {
+      case 'h':
+        return value;
+      case 'd':
+        return value * 24;
+      default:
+        return 0;
+    }
+  };
+
+  const sortedNotifications = [...notificationsData].sort((a, b) => parseTime(a.time) - parseTime(b.time));
+
   return (
     <div className="w-full">
         {/* Header */}
@@ -110,7 +151,7 @@ const Notifications = () => {
         </div>
 
         <div>
-            {notificationsData.map(notification => (
+            {sortedNotifications.map(notification => (
                 <NotificationItem key={notification.id} notification={notification} />
             ))}
         </div>
