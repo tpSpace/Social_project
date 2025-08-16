@@ -8,6 +8,7 @@ import Notifications from "../pages/Notifications";
 import Messages from "../pages/Messages";
 import Bookmarks from "../pages/Bookmarks";
 import Profile from "../pages/Profile";
+import ForgotPassword from "../pages/ForgotPassword";
 
 export const router = createBrowserRouter([
     {
@@ -47,5 +48,9 @@ export const router = createBrowserRouter([
     {
         path: "/register",
         element: <Register />,
+    },
+    {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
     },
 ]);

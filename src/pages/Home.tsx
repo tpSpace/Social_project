@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import Timeline from '../components/Timeline';
-import { addPost, getAllPosts, seedPosts, deletePost } from '../utils/db';
+import { addPost, getAllPosts, seedPosts, deletePost, updatePost } from '../utils/db';
+
+// Define a type for the post object for type safety
+export interface Post {
+    id: number;
+    author: string;
+    handle: string;
+    time: string;
+    content: string;
+    likes: number;
+    comments: number;
+    retweets: number;
+    avatar?: string;
+    image?: string;
+}
 
 const currentUser = {
     name: 'PhatMotSach',
@@ -9,13 +23,13 @@ const currentUser = {
 };
 
 const Home = () => {
-    const [posts, setPosts] = useState<any[]>([]);
+    const [posts, setPosts] = useState<Post[]>([]);
 
     useEffect(() => {
         const fetchAndSeedPosts = async () => {
             await seedPosts(); // Seed posts if DB is empty
             const dbPosts = await getAllPosts();
-            const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+            const sortedPosts = (dbPosts as Post[]).sort((a, b) => b.id - a.id);
             setPosts(sortedPosts);
         };
         fetchAndSeedPosts();
@@ -33,7 +47,7 @@ const Home = () => {
             });
         }
 
-        const newPost = {
+        const newPost: Post = {
             id: Date.now(),
             author: currentUser.name,
             handle: currentUser.handle,
@@ -47,23 +61,23 @@ const Home = () => {
         };
         await addPost(newPost);
         const dbPosts = await getAllPosts();
-        const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+        const sortedPosts = (dbPosts as Post[]).sort((a, b) => b.id - a.id);
         setPosts(sortedPosts);
     };
 
-    const handleDeletePost = async (id: string) => {
+    const handleDeletePost = async (id: number) => {
         if (window.confirm('Are you sure you want to delete this post?')) {
-            await deletePost(Number(id));
+            await deletePost(id);
             const dbPosts = await getAllPosts();
-            const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+            const sortedPosts = (dbPosts as Post[]).sort((a, b) => b.id - a.id);
             setPosts(sortedPosts);
         }
     };
 
-    const handleEditPost = async (updatedPost: any) => {
-        await updatedPost(updatedPost);
+    const handleEditPost = async (updatedPost: Post) => {
+        await updatePost(updatedPost);
         const dbPosts = await getAllPosts();
-        const sortedPosts = dbPosts.sort((a, b) => b.id - a.id);
+        const sortedPosts = (dbPosts as Post[]).sort((a, b) => b.id - a.id);
         setPosts(sortedPosts);
     };
 
@@ -83,7 +97,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
-
-

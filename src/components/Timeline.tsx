@@ -2,19 +2,7 @@ import React from 'react';
 import PostComposer from './PostComposer';
 import Post from './Post';
 import { Sparkles } from 'lucide-react';
-
-interface PostData {
-  id: string;
-  author: string;
-  handle: string;
-  time: string;
-  content: string;
-  likes: number;
-  comments: number;
-  retweets: number;
-  avatar?: string;
-  image?: string;
-}
+import { Post as PostData } from '../pages/Home'; // Import the centralized Post interface
 
 interface TimelineProps {
   title: string;
@@ -24,8 +12,8 @@ interface TimelineProps {
   showTabs?: boolean;
   composerAvatar?: string;
   currentUserHandle?: string;
-  onDeletePost?: (id: string) => void;
-  onEditPost?: (updatedPost: PostData) => void; // New prop
+  onDeletePost?: (id: number) => void; // Use number for ID
+  onEditPost?: (updatedPost: PostData) => void;
 }
 
 const Timeline: React.FC<TimelineProps> = ({ title, posts, onNewPost, showComposer = false, showTabs = false, composerAvatar = '', currentUserHandle, onDeletePost, onEditPost }) => {

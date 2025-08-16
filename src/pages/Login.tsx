@@ -12,21 +12,6 @@ const Login = () => {
           <h1 className="text-3xl font-bold">Sign in to Hulk-Hub</h1>
         </div>
 
-        <div className="space-y-4">
-          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
-            Sign in with Google
-          </button>
-          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
-            Sign in with Apple
-          </button>
-        </div>
-
-        <div className="flex items-center my-6">
-          <hr className="flex-grow border-gray-700" />
-          <span className="mx-4 text-gray-500">or</span>
-          <hr className="flex-grow border-gray-700" />
-        </div>
-
         <form className="space-y-6">
           <div>
             <input
@@ -46,9 +31,24 @@ const Login = () => {
             Sign In
           </button>
         </form>
+        
+        <div className="flex items-center my-6">
+          <hr className="flex-grow border-gray-700" />
+          <span className="mx-4 text-gray-500">or</span>
+          <hr className="flex-grow border-gray-700" />
+        </div>
+
+        <div className="space-y-4">
+          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
+            Sign in with Google
+          </button>
+          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
+            Sign in with Apple
+          </button>
+        </div>
 
         <div className="mt-6 text-center">
-          <Link to="#" className="text-blue-500 hover:underline">
+          <Link to="/forgot-password" className="text-blue-500 hover:underline">
             Forgot password?
           </Link>
         </div>

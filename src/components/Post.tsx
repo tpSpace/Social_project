@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, BadgeCheck } from 'lucide-react'; // Added BadgeCheck
+import React, { useState, useEffect } from 'react';
+import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, BadgeCheck } from 'lucide-react';
 
+// Updated to use number for ID for consistency
 interface PostData {
-  id: string;
+  id: number;
   author: string;
   handle: string;
   time: string;
@@ -15,9 +16,9 @@ interface PostData {
 }
 
 interface PostProps extends PostData {
-  isCurrentUserPost?: boolean; // New prop to indicate if it's the current user's post
-  onDeletePost?: (id: string) => void; // New prop for delete functionality
-  onEditPost?: (updatedPost: PostData) => void; // New prop for edit functionality
+  isCurrentUserPost?: boolean;
+  onDeletePost?: (id: number) => void; // ID is now a number
+  onEditPost?: (updatedPost: PostData) => void;
 }
 
 const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, likes, comments, retweets, image, isCurrentUserPost, onDeletePost, onEditPost }) => {
@@ -25,11 +26,14 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
   const [isRetweeted, setIsRetweeted] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(likes);
   const [currentRetweets, setCurrentRetweets] = useState(retweets);
-  const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
-  const [isEditing, setIsEditing] = useState(false); // State for edit mode
-  const [editedContent, setEditedContent] = useState(content); // State for edited content
-  const [editedImage, setEditedImage] = useState<string | undefined>(image); // State for edited image
-  const [newImageFile, setNewImageFile] = useState<File | undefined>(undefined); // State for new image file
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(content);
+  const [displayContent, setDisplayContent] = useState(content);
+
+  useEffect(() => {
+    setDisplayContent(content);
+  }, [content]);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -43,29 +47,19 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
 
   const handleDelete = () => {
     if (onDeletePost) {
-      onDeletePost(id);
+      onDeletePost(id); // ID is already a number
     }
     setShowDropdown(false);
   };
 
   const handleEdit = () => {
+    setEditedContent(displayContent);
     setIsEditing(true);
     setShowDropdown(false);
   };
 
-  const handleSaveEdit = async () => {
-    let imageUrlToSave = editedImage;
-    if (newImageFile) {
-      imageUrlToSave = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          resolve(reader.result as string);
-        };
-        reader.readAsDataURL(newImageFile);
-      });
-    }
-
-    const updatedPost = {
+  const handleSaveEdit = () => {
+    const updatedPost: PostData = {
       id,
       author,
       handle,
@@ -75,37 +69,26 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
       comments,
       retweets,
       avatar,
-      image: imageUrlToSave,
+      image: image,
     };
-
-    console.log('Saving post with image URL:', imageUrlToSave); // Debugging line
 
     if (onEditPost) {
       onEditPost(updatedPost);
     }
+    setDisplayContent(editedContent);
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
-    setEditedContent(content);
-    setEditedImage(image);
-    setNewImageFile(undefined);
     setIsEditing(false);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setNewImageFile(e.target.files[0]);
-      setEditedImage(URL.createObjectURL(e.target.files[0])); // For immediate preview
-    }
-  };
-
-  let dropdownTimeout: ReturnType<typeof setTimeout>; // Declare a variable to hold the timeout ID
+  let dropdownTimeout: ReturnType<typeof setTimeout>;
 
   const handleDropdownMouseLeave = () => {
     dropdownTimeout = setTimeout(() => {
       setShowDropdown(false);
-    }, 200); // 200ms delay
+    }, 200);
   };
 
   const handleDropdownMouseEnter = () => {
@@ -123,12 +106,10 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
           )}
         </div>
 
-
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-2">
             <h3 className="font-bold text-white hover:underline cursor-pointer flex items-center">
               {author}
-              {/* Replaced inline SVG with BadgeCheck */}
               <BadgeCheck className="w-4 h-4 text-blue-500 ml-1" />
             </h3>
             <span className="text-gray-400 text-sm">@{handle}</span>
@@ -170,22 +151,11 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
                 onChange={(e) => setEditedContent(e.target.value)}
                 rows={3}
               />
-              {editedImage && (
+              {image && (
                 <div className="my-2 rounded-2xl border border-gray-800 overflow-hidden">
-                  <img src={editedImage} alt="Post image preview" className="w-full h-auto object-cover" />
+                  <img src={image} alt="Post image" className="w-full h-auto object-cover" />
                 </div>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-400
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
-              />
               <div className="flex justify-end space-x-2">
                 <button
                   className="px-4 py-2 text-sm font-semibold rounded-full bg-gray-700 text-white hover:bg-gray-600"
@@ -202,7 +172,7 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
               </div>
             </div>
           ) : (
-            <p className="text-white text-base leading-normal mb-3 break-words whitespace-pre-wrap">{content}</p>
+            <p className="text-white text-base leading-normal mb-3 break-words whitespace-pre-wrap">{displayContent}</p>
           )}
 
           {!isEditing && image && (
@@ -219,8 +189,7 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
 
             <button
               onClick={handleRetweet}
-              className={`flex items-center space-x-2 hover:bg-green-500 hover:bg-opacity-10 p-2 rounded-full transition-colors group ${isRetweeted ? 'text-green-500' : 'hover:text-green-500'
-                }`}
+              className={`flex items-center space-x-2 hover:bg-green-500 hover:bg-opacity-10 p-2 rounded-full transition-colors group ${isRetweeted ? 'text-green-500' : 'hover:text-green-500'}`}
             >
               <Repeat2 size={18} />
               <span className="text-sm">{currentRetweets > 0 ? currentRetweets : ''}</span>
@@ -228,8 +197,7 @@ const Post: React.FC<PostProps> = ({ id, avatar, author, handle, time, content, 
 
             <button
               onClick={handleLike}
-              className={`flex items-center space-x-2 hover:bg-red-500 hover:bg-opacity-10 p-2 rounded-full transition-colors group ${isLiked ? 'text-red-500' : 'hover:text-red-500'
-                }`}
+              className={`flex items-center space-x-2 hover:bg-red-500 hover:bg-opacity-10 p-2 rounded-full transition-colors group ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
             >
               <Heart size={18} className={isLiked ? 'fill-current' : ''} />
               <span className="text-sm">{currentLikes > 0 ? currentLikes : ''}</span>
