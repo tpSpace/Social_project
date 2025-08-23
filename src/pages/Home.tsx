@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Timeline from '../components/Timeline';
-import { addPost, getAllPosts, seedPosts, deletePost, updatePost } from '../utils/db';
+import { addPost, getAllPosts, seedPosts, deletePost, updatePost, getCurrentUser } from '../utils/db';
 
 // Define a type for the post object for type safety
 export interface Post {
@@ -16,16 +16,33 @@ export interface Post {
     image?: string;
 }
 
-const currentUser = {
-    name: 'PhatMotSach',
-    handle: 'phatmotsach',
-    avatar: 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_14_60037b48e5.jpg' // A consistent avatar for the user
-};
+interface User {
+    id?: number;
+    name: string;
+    email: string;
+    username: string;
+    bio: string;
+    avatar: string;
+    backgroundAvatar: string;
+    occupation: string;
+    location: string;
+    joinDate: string;
+    stats: {
+      following: number;
+      followers: number;
+    };
+  }
 
 const Home = () => {
     const [posts, setPosts] = useState<Post[]>([]);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
+        const user = getCurrentUser();
+        if (user) {
+            setCurrentUser(user);
+        }
+
         const fetchAndSeedPosts = async () => {
             await seedPosts(); // Seed posts if DB is empty
             const dbPosts = await getAllPosts();
@@ -36,6 +53,8 @@ const Home = () => {
     }, []);
 
     const handleNewPost = async (content: string, imageFile?: File) => {
+        if (!currentUser) return;
+
         let imageUrl: string | undefined;
         if (imageFile) {
             imageUrl = await new Promise<string>((resolve) => {
@@ -50,7 +69,7 @@ const Home = () => {
         const newPost: Post = {
             id: Date.now(),
             author: currentUser.name,
-            handle: currentUser.handle,
+            handle: currentUser.username,
             time: 'now',
             content,
             likes: 0,
@@ -81,6 +100,10 @@ const Home = () => {
         setPosts(sortedPosts);
     };
 
+    if (!currentUser) {
+        return <div>Loading...</div>
+    }
+
     return (
         <Timeline 
             title="Home" 
@@ -89,7 +112,7 @@ const Home = () => {
             showComposer 
             showTabs 
             composerAvatar={currentUser.avatar}
-            currentUserHandle={currentUser.handle}
+            currentUserHandle={currentUser.username}
             onDeletePost={handleDeletePost}
             onEditPost={handleEditPost}
         />

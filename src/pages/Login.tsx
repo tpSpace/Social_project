@@ -1,7 +1,33 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { getUserByEmail } from '../utils/db';
+import toast from 'react-hot-toast';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      toast.error('Email and password are required');
+      return;
+    }
+
+    const user = await getUserByEmail(email);
+
+    if (!user || user.password !== password) { // In a real app, compare hashed passwords
+      toast.error('Invalid email or password');
+      return;
+    }
+
+    localStorage.setItem('user', JSON.stringify(user));
+    toast.success('Login successful!');
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
       <div className="max-w-md w-full bg-black p-8 rounded-2xl shadow-lg">
@@ -12,11 +38,13 @@ const Login = () => {
           <h1 className="text-3xl font-bold">Sign in to Hulk-Hub</h1>
         </div>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <input
-              type="text"
-              placeholder="Phone, email, or username"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -24,10 +52,12 @@ const Login = () => {
             <input
               type="password"
               placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button className="w-full bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition-colors">
+          <button type="submit" className="w-full bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition-colors">
             Sign In
           </button>
         </form>

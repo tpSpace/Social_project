@@ -1,25 +1,41 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getCurrentUser, updateUser } from '../utils/db';
+import toast from 'react-hot-toast';
+
+interface User {
+  id?: number;
+  name: string;
+  email: string;
+  username: string;
+  bio: string;
+  avatar: string;
+  backgroundAvatar: string;
+  occupation: string;
+  location: string;
+  joinDate: string;
+  stats: {
+    following: number;
+    followers: number;
+  };
+}
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState({
-    name: 'PhatMotSach',
-    username: 'phatmotsach',
-    bio: 'Xin chào, tớ là Phát, tớ thích học tập và tìm hiểu những thứ mới mẻ, rất mong được làm quen với mọi người nhé!',
-    avatar: 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_14_60037b48e5.jpg',
-    backgroundAvatar: 'https://c4.wallpaperflare.com/wallpaper/410/867/750/vector-forest-sunset-forest-sunset-forest-wallpaper-preview.jpg',
-    occupation: 'Software Engineer',
-    location: 'Ho Chi Minh City',
-    joinDate: '2025-08-16',
-    stats: {
-      following: 750,
-      followers: 140,
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [editedUser, setEditedUser] = useState<User | null>(null);
+  const navigate = useNavigate();
 
-  const [editedUser, setEditedUser] = useState({ ...user });
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      setEditedUser(currentUser);
+    }
+  }, []);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -27,46 +43,60 @@ const Profile = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
-    setEditedUser({ ...user });
+    if (user) {
+      setEditedUser({ ...user });
+    }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUser(editedUser);
-    setIsEditing(false);
+    if (editedUser) {
+      await updateUser(editedUser);
+      localStorage.setItem('user', JSON.stringify(editedUser));
+      setUser(editedUser);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setEditedUser(prev => ({ ...prev, [name]: value }));
+    if (editedUser) {
+      setEditedUser({ ...editedUser, [name]: value });
+    }
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setEditedUser(prev => ({ ...prev, avatar: reader.result as string }));
+        setEditedUser({ ...editedUser, avatar: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setEditedUser(prev => ({ ...prev, backgroundAvatar: reader.result as string }));
+        setEditedUser({ ...editedUser, backgroundAvatar: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleLogout = () => {
-    // User will handle logout logic
-    alert('Logout functionality to be implemented by the user.');
+    localStorage.removeItem('user');
+    toast.success('Logout successful!');
+    navigate('/login');
   };
+
+  if (!user || !editedUser) {
+    return <div>Loading...</div>; // Or a more sophisticated loading state
+  }
 
   return (
     <div className="bg-black min-h-screen text-white">
@@ -263,6 +293,7 @@ const Profile = () => {
                 Log Out
               </button>
             </div>
+
           </div>
         </div>
       </div>

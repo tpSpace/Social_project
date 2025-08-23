@@ -52,7 +52,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPost, avatar }) => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What is happening?!"
-              className="w-full bg-transparent text-white text-xl placeholder-gray-500 resize-none focus:outline-none min-h-[120px]"
+              className="w-full bg-transparent text-white text-lg placeholder-gray-500 resize-none focus:outline-none min-h-[120px]"
               rows={3}
               maxLength={maxLength}
             />

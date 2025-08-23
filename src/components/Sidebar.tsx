@@ -1,17 +1,43 @@
-import React from 'react';
-import { Home, Compass, Bell, Mail, Bookmark, User, MoreHorizontal } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Home, Compass, Bell, Mail, Bookmark, User as UserIcon, MoreHorizontal } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { getCurrentUser } from '../utils/db';
+
+interface User {
+  id?: number;
+  name: string;
+  email: string;
+  username: string;
+  bio: string;
+  avatar: string;
+  backgroundAvatar: string;
+  occupation: string;
+  location: string;
+  joinDate: string;
+  stats: {
+    following: number;
+    followers: number;
+  };
+}
 
 const Sidebar = () => {
   const location = useLocation();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+    }
+  }, [location]);
+
   const menuItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Compass, label: 'Explore', path: '/explore' },
     { icon: Bell, label: 'Notifications', path: '/notifications' },
     { icon: Mail, label: 'Messages', path: '/messages' },
     { icon: Bookmark, label: 'Bookmarks', path: '/bookmarks' },
-    { icon: User, label: 'Profile', path: '/profile' },
-    { icon: MoreHorizontal, label: 'More', path: '#' } // Or handle as a dropdown/modal
+    { icon: UserIcon, label: 'Profile', path: '/profile' },
   ];
 
   return (
@@ -50,18 +76,22 @@ const Sidebar = () => {
 
       {/* User Profile */}
       <div className="mt-auto pt-4">
-        <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold">H</span>
+        {user && (
+            <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
+                <div className="flex items-center space-x-3">
+                    <img
+                        src={user.avatar}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="hidden xl:block">
+                    <div className="font-bold">{user.name}</div>
+                    <div className="text-gray-500 text-sm">@{user.username}</div>
+                    </div>
+                </div>
+                <MoreHorizontal className="hidden xl:block" size={20} />
             </div>
-            <div className="hidden xl:block">
-              <div className="font-bold">Hulk</div>
-              <div className="text-gray-500 text-sm">@hulkmaster</div>
-            </div>
-          </div>
-          <MoreHorizontal className="hidden xl:block" size={20} />
-        </div>
+        )}
       </div>
     </div>
   );
