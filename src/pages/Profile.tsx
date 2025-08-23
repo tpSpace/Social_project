@@ -161,7 +161,7 @@ const Profile = () => {
                   </button>
                 </div>
               ) : (
-                <button onClick={handleEdit} className="border border-blue-500 text-blue-500 px-4 py-2 rounded-full hover:bg-blue-500 hover:text-white transition-colors duration-300 ease-in-out">
+                <button onClick={handleEdit} className="border border-blue-500 text-blue-500 px-4 py-2 bg-opacity-40 bg-gray-500 rounded-full hover:bg-blue-500 hover:text-white transition-colors duration-300 ease-in-out">
                   Edit Profile
                 </button>
               )}
@@ -285,10 +285,10 @@ const Profile = () => {
               </form>
             )}
 
-            <div className="mt-8 border-t border-gray-700 pt-4">
+            <div className="mt-8 border-t border-gray-700 pt-5">
               <button
                 onClick={handleLogout}
-                className="w-full text-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-2 rounded-md transition-colors duration-300 ease-in-out"
+                className="w-full text-center text-red-500 hover:bg-red-500 hover:text-white px-3 py-3 rounded-md transition-colors duration-300 ease-in-out"
               >
                 Log Out
               </button>

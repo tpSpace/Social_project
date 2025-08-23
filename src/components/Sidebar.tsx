@@ -44,9 +44,11 @@ const Sidebar = () => {
     <div className="p-4 h-full flex flex-col">
       {/* Logo */}
       <div className="mb-8">
-        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-          <span className="text-black font-bold text-lg">H</span>
-        </div>
+        <Link to="/">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+            <span className="text-black font-bold text-lg">H</span> 
+          </div>
+        </Link>
       </div>
 
       {/* Navigation */}
@@ -70,28 +72,32 @@ const Sidebar = () => {
 
       {/* Post Button */}
       <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full mt-6 w-full xl:w-auto">
-        <span className="hidden xl:block">Post</span>
-        <span className="xl:hidden">+</span>
+        <Link to="/">
+          <span className="hidden xl:block">Post</span>
+          <span className="xl:hidden">+</span>
+        </Link>
       </button>
 
       {/* User Profile */}
       <div className="mt-auto pt-4">
-        {user && (
-            <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
-                <div className="flex items-center space-x-3">
-                    <img
-                        src={user.avatar}
-                        alt="Avatar"
-                        className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="hidden xl:block">
-                    <div className="font-bold">{user.name}</div>
-                    <div className="text-gray-500 text-sm">@{user.username}</div>
-                    </div>
-                </div>
-                <MoreHorizontal className="hidden xl:block" size={20} />
-            </div>
-        )}
+        <Link to="/profile">
+          {user && (
+              <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
+                  <div className="flex items-center space-x-3">
+                      <img
+                          src={user.avatar}
+                          alt="Avatar"
+                          className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="hidden xl:block">
+                      <div className="font-bold">{user.name}</div>
+                      <div className="text-gray-500 text-sm">@{user.username}</div>
+                      </div>
+                  </div>
+                  <MoreHorizontal className="hidden xl:block" size={20} />
+              </div>
+          )}
+        </Link>
       </div>
     </div>
   );

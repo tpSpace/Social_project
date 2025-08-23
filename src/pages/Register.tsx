@@ -49,7 +49,7 @@ const Register = () => {
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
       <div className="max-w-md w-full bg-black p-8 rounded-2xl shadow-lg">
         <div className="text-center mb-8">
-          <div className="inline-block w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
             <span className="text-black font-bold text-2xl">H</span>
           </div>
           <h1 className="text-3xl font-bold">Create your account</h1>
@@ -84,7 +84,10 @@ const Register = () => {
             />
           </div>
           <div className="text-sm text-gray-500">
-            By signing up, you agree to the <Link to="#" className="text-blue-500 hover:underline">Terms of Service</Link> and <Link to="#" className="text-blue-500 hover:underline">Privacy Policy</Link>, including <Link to="#" className="text-blue-500 hover:underline">Cookie Use</Link>.
+            <input type="checkbox" id="terms" name="terms" required />
+            <label htmlFor="terms" className="ml-2">
+              By signing up, you agree to the <Link to="#" className="text-blue-500 hover:underline">Terms of Service</Link> and <Link to="#" className="text-blue-500 hover:underline">Privacy Policy</Link>, including <Link to="#" className="text-blue-500 hover:underline">Cookie Use</Link>.
+            </label>
           </div>
           <button type="submit" className="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-full hover:bg-blue-600 transition-colors">
             Sign Up

@@ -6,7 +6,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
       <div className="max-w-md w-full bg-black p-8 rounded-2xl shadow-lg">
         <div className="text-center mb-8">
-          <div className="inline-block w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
             <span className="text-black font-bold text-2xl">H</span>
           </div>
           <h1 className="text-3xl font-bold">Forgot Password</h1>
