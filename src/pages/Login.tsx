@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { getUserByEmail } from '../utils/db';
-import toast from 'react-hot-toast';
+import { useNavigate, Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { authService } from '../services/auth.service';
+import { toast } from 'react-hot-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -10,23 +11,21 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!email || !password) {
-      toast.error('Email and password are required');
-      return;
-    }
-
-    const user = await getUserByEmail(email);
-
-    if (!user || user.password !== password) { // In a real app, compare hashed passwords
-      toast.error('Invalid email or password');
-      return;
-    }
-
-    localStorage.setItem('user', JSON.stringify(user));
-    toast.success('Login successful!');
-    navigate('/');
+    loginMutation.mutate({ email, password });
   };
+
+  const loginMutation = useMutation({
+    mutationFn: authService.login,
+    onSuccess: (data) => {
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      toast.success('Login successful!');
+      navigate('/');
+    },
+    onError: (error) => {
+      toast.error('Login failed');
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
