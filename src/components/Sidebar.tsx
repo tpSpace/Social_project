@@ -1,33 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Home, Compass, Bell, Mail, Bookmark, User as UserIcon, MoreHorizontal } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { getCurrentUser } from '../utils/db';
-
-interface User {
-  id?: number;
-  name: string;
-  email: string;
-  username: string;
-  bio: string;
-  avatar: string;
-  backgroundAvatar: string;
-  occupation: string;
-  location: string;
-  joinDate: string;
-  stats: {
-    following: number;
-    followers: number;
-  };
-}
+import type { User } from '../types/index';
 
 const Sidebar = () => {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
+    // Lấy user data từ localStorage thay vì IndexedDB
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        // Transform backend user data sang frontend format
+        const transformedUser: User = {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          username: userData.email.split('@')[0], // Tạm thời dùng email làm username
+          bio: 'Frontend Developer',
+          avatar: 'https://i.pravatar.cc/150?img=1', // Avatar mặc định
+          backgroundAvatar: 'https://picsum.photos/800/200',
+          occupation: 'Developer',
+          location: 'Vietnam',
+          joinDate: '2024',
+          stats: {
+            following: 0,
+            followers: 0
+          }
+        };
+        setUser(transformedUser);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
     }
   }, [location]);
 

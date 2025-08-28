@@ -36,12 +36,34 @@ export const authService = {
   },
 
   async refresh() {
-    const response = await api.post('/auth/refresh');
-    return response.data;
+    try {
+      const response = await api.post('/auth/refresh');
+      return response.data;
+    } catch (error) {
+      console.error('Refresh token failed:', error);
+      throw error;
+    }
   },
 
   async getMe() {
-    const response = await api.get('/users/me');
-    return response.data;
+    try {
+      const response = await api.get('/users/me');
+      return response.data;
+    } catch (error: any) {
+      // Nếu access token hết hạn, thử refresh
+      if (error.response?.status === 401) {
+        console.log('Access token expired, trying to refresh...');
+        try {
+          await this.refresh();
+          // Thử lại sau khi refresh
+          const retryResponse = await api.get('/users/me');
+          return retryResponse.data;
+        } catch (refreshError) {
+          console.error('Failed to refresh token:', refreshError);
+          throw refreshError;
+        }
+      }
+      throw error;
+    }
   },
 };

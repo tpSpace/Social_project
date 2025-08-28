@@ -16,7 +16,7 @@ const Register = () => {
 
   const registerMutation = useMutation({
     mutationFn: authService.register,
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success('Registration successful! Please login.');
       navigate('/login');
     },
