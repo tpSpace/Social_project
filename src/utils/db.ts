@@ -59,66 +59,75 @@ export const updatePost = async (post: any) => {
 
 export const seedPosts = async () => {
     const db = await dbPromise;
-    const count = await db.count(POSTS_STORE_NAME);
-  
-    if (count === 0) {
-      const samplePosts = [
-        {
-          id: 1,
-          author: 'Alice',
-          handle: 'alice_wonder',
-          time: '2h',
-          content: 'Just enjoyed a wonderful cup of coffee this morning! #coffee #morningvibes',
-          likes: 15,
-          comments: 3,
-          retweets: 1,
-          avatar: 'https://i.pravatar.cc/150?img=1',
-          image: undefined,
-        },
-        {
-          id: 2,
-          author: 'Bob',
-          handle: 'bob_builder',
-          time: '5h',
-          content: 'Working on a new project. So excited to share it soon!',
-          likes: 30,
-          comments: 7,
-          retweets: 5,
-          avatar: 'https://i.pravatar.cc/150?img=2',
-          image: 'https://picsum.photos/600/400?random=1', // Sample image URL
-        },
-        {
-          id: 3,
-          author: 'Charlie',
-          handle: 'charlie_chaplin',
-          time: '1d',
-          content: 'What a beautiful sunset today! Nature never ceases to amaze me. #sunset #nature',
-          likes: 50,
-          comments: 10,
-          retweets: 8,
-          avatar: 'https://i.pravatar.cc/150?img=3',
-          image: 'https://picsum.photos/600/400?random=2', // Sample image URL
-        },
-        {
-          id: 4,
-          author: 'Diana',
-          handle: 'diana_prince',
-          time: '2d',
-          content: 'Reading a great book. Any recommendations for my next read?',
-          likes: 22,
-          comments: 5,
-          retweets: 2,
-          avatar: 'https://i.pravatar.cc/150?img=4',
-          image: undefined,
-        },
-      ];
-  
-      for (const post of samplePosts) {
-        await db.add(POSTS_STORE_NAME, post);
-      }
-      console.log('Sample posts added to IndexedDB.');
+    
+    try {
+        // Kiểm tra xem đã có posts chưa
+        const count = await db.count(POSTS_STORE_NAME);
+        
+        if (count === 0) {
+            const samplePosts = [
+                {
+                    id: 1,
+                    author: 'Alice',
+                    handle: 'alice_wonder',
+                    time: '2h',
+                    content: 'Just enjoyed a wonderful cup of coffee this morning! #coffee #morningvibes',
+                    likes: 15,
+                    comments: 3,
+                    retweets: 1,
+                    avatar: 'https://i.pravatar.cc/150?img=1',
+                    image: undefined,
+                },
+                {
+                    id: 2,
+                    author: 'Bob',
+                    handle: 'bob_builder',
+                    time: '5h',
+                    content: 'Working on a new project. So excited to share it soon!',
+                    likes: 30,
+                    comments: 7,
+                    retweets: 5,
+                    avatar: 'https://i.pravatar.cc/150?img=2',
+                    image: 'https://picsum.photos/600/400?random=1',
+                },
+                {
+                    id: 3,
+                    author: 'Charlie',
+                    handle: 'charlie_chaplin',
+                    time: '1d',
+                    content: 'What a beautiful sunset today! Nature never ceases to amaze me. #sunset #nature',
+                    likes: 50,
+                    comments: 10,
+                    retweets: 8,
+                    avatar: 'https://i.pravatar.cc/150?img=3',
+                    image: 'https://picsum.photos/600/400?random=2',
+                },
+            ];
+
+            // Sử dụng transaction để đảm bảo atomicity
+            const tx = db.transaction(POSTS_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(POSTS_STORE_NAME);
+            
+            for (const post of samplePosts) {
+                try {
+                    await store.add(post);
+                } catch (error) {
+                    // Bỏ qua lỗi duplicate key
+                    if (error.name !== 'ConstraintError') {
+                        console.error('Error adding sample post:', error);
+                    }
+                }
+            }
+            
+            await tx.done;
+            console.log('✅ Sample posts added to IndexedDB');
+        } else {
+            console.log('✅ Posts already exist in IndexedDB');
+        }
+    } catch (error) {
+        console.error('Error seeding posts:', error);
     }
-  };
+};
 
 // User functions
 export const addUser = async (user: User) => {

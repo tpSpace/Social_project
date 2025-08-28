@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, updateUser } from '../utils/db';
+import { authService } from '../services/auth.service';
 import toast from 'react-hot-toast';
 
 interface User {
-  id?: number;
+  id: string;
   name: string;
   email: string;
   username: string;
@@ -24,17 +24,100 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [editedUser, setEditedUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      setEditedUser(currentUser);
-    }
+    const loadUserData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Lấy user data từ backend API
+        const response = await authService.getMe();
+        
+        if (response.success && response.data) {
+          // Transform backend user data sang frontend format
+          const userData = response.data;
+          const transformedUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            username: userData.email.split('@')[0], // Tạm thời dùng email làm username
+            bio: 'Frontend Developer', // Có thể thêm vào backend sau
+            avatar: 'https://i.pravatar.cc/150?img=1', // Avatar mặc định
+            backgroundAvatar: 'https://picsum.photos/800/200',
+            occupation: 'Developer',
+            location: 'Vietnam',
+            joinDate: '2024',
+            stats: {
+              following: 0,
+              followers: 0
+            }
+          };
+          
+          setUser(transformedUser);
+          setEditedUser(transformedUser);
+        } else {
+          // Fallback: lấy từ localStorage nếu API fail
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userData = JSON.parse(userStr);
+            const fallbackUser: User = {
+              id: userData.id || Date.now().toString(),
+              name: userData.name,
+              email: userData.email,
+              username: userData.email.split('@')[0],
+              bio: 'Frontend Developer',
+              avatar: 'https://i.pravatar.cc/150?img=1',
+              backgroundAvatar: 'https://picsum.photos/800/200',
+              occupation: 'Developer',
+              location: 'Vietnam',
+              joinDate: '2024',
+              stats: {
+                following: 0,
+                followers: 0
+              }
+            };
+            setUser(fallbackUser);
+            setEditedUser(fallbackUser);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        toast.error('Failed to load profile data');
+        
+        // Fallback to localStorage
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userData = JSON.parse(userStr);
+          const fallbackUser: User = {
+            id: userData.id || Date.now().toString(),
+            name: userData.name,
+            email: userData.email,
+            username: userData.email.split('@')[0],
+            bio: 'Frontend Developer',
+            avatar: 'https://i.pravatar.cc/150?img=1',
+            backgroundAvatar: 'https://picsum.photos/800/200',
+            occupation: 'Developer',
+            location: 'Vietnam',
+            joinDate: '2024',
+            stats: {
+              following: 0,
+              followers: 0
+            }
+          };
+          setUser(fallbackUser);
+          setEditedUser(fallbackUser);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
   }, []);
 
   const handleEdit = () => {
@@ -51,11 +134,19 @@ const Profile = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editedUser) {
-      await updateUser(editedUser);
-      localStorage.setItem('user', JSON.stringify(editedUser));
-      setUser(editedUser);
-      setIsEditing(false);
-      toast.success('Profile updated successfully!');
+      try {
+        // TODO: Gọi API update user khi backend có endpoint
+        // await authService.updateProfile(editedUser);
+        
+        // Tạm thời lưu vào localStorage
+        localStorage.setItem('user', JSON.stringify(editedUser));
+        setUser(editedUser);
+        setIsEditing(false);
+        toast.success('Profile updated successfully!');
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        toast.error('Failed to update profile');
+      }
     }
   };
 
@@ -90,12 +181,38 @@ const Profile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     toast.success('Logout successful!');
     navigate('/login');
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user || !editedUser) {
-    return <div>Loading...</div>; // Or a more sophisticated loading state
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">Failed to load profile data</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -201,11 +318,11 @@ const Profile = () => {
 
             <div className="mt-4 flex justify-start space-x-8">
               <div className="text-center flex">
-                <p className="font-bold text-lg">{user.stats.following}</p>
+                <p className="font-bold text-lg">{user.stats?.following || 0}</p>
                 <p className="text-gray-400 text-lg ml-1">Following</p>
               </div>
               <div className="text-center flex">
-                <p className="font-bold text-lg">{user.stats.followers}</p>
+                <p className="font-bold text-lg">{user.stats?.followers || 0}</p>
                 <p className="text-gray-400 text-lg ml-1">Followers</p>
               </div>
             </div>

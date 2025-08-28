@@ -9,23 +9,44 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  const loginMutation = useMutation({
+    mutationFn: authService.login,
+    onSuccess: (response) => {
+      console.log('Login response:', response);
+      
+      // Kiểm tra response structure
+      if (response.success && response.data) {
+        // Lưu thông tin user
+        localStorage.setItem('user', JSON.stringify(response.data));
+        
+        // Kiểm tra xem có tokens trong response không
+        if (response.access_token) {
+          localStorage.setItem('access_token', response.access_token);
+        }
+        if (response.refresh_token) {
+          localStorage.setItem('refresh_token', response.refresh_token);
+        }
+        
+        // Nếu không có tokens, có thể backend sử dụng session/cookies
+        // Lưu user info để sử dụng cho các API calls
+        localStorage.setItem('isAuthenticated', 'true');
+        
+        toast.success('Login successful!');
+        navigate('/');
+      } else {
+        toast.error('Login response format error');
+      }
+    },
+    onError: (error: any) => {
+      console.error('Login error:', error);
+      toast.error(error.response?.data?.message || 'Login failed');
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate({ email, password });
   };
-
-  const loginMutation = useMutation({
-    mutationFn: authService.login,
-    onSuccess: (data) => {
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      toast.success('Login successful!');
-      navigate('/');
-    },
-    onError: (error) => {
-      toast.error('Login failed');
-    },
-  });
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
@@ -45,6 +66,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           <div>
@@ -54,10 +76,15 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
-          <button type="submit" className="w-full bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition-colors">
-            Sign In
+          <button 
+            type="submit" 
+            disabled={loginMutation.isPending}
+            className="w-full bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            {loginMutation.isPending ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
         

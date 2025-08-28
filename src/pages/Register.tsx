@@ -1,48 +1,77 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { addUser, getUserByEmail } from '../utils/db';
-import toast from 'react-hot-toast';
+import { useNavigate, Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { authService } from '../services/auth.service';
+import { toast } from 'react-hot-toast';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+
+  const registerMutation = useMutation({
+    mutationFn: authService.register,
+    onSuccess: (data) => {
+      toast.success('Registration successful! Please login.');
+      navigate('/login');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Registration failed');
+    },
+  });
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!name || !email || !password) {
-      toast.error('All fields are required');
-      return;
+    
+    if (validateForm()) {
+      registerMutation.mutate({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
     }
+  };
 
-    const existingUser = await getUserByEmail(email);
-    if (existingUser) {
-      toast.error('User with this email already exists');
-      return;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
-
-    const newUser = {
-      name,
-      email,
-      password, // In a real app, hash this password
-      username: email.split('@')[0],
-      bio: '',
-      avatar: `https://avatar.iran.liara.run/public`,
-      backgroundAvatar: 'https://picsum.photos/seed/picsum/800/600',
-      occupation: '',
-      location: '',
-      joinDate: new Date().toISOString(),
-      stats: {
-        following: 0,
-        followers: 0,
-      }
-    };
-
-    await addUser(newUser);
-    toast.success('Registration successful!');
-    navigate('/login');
   };
 
   return (
@@ -53,51 +82,94 @@ const Register = () => {
             <span className="text-black font-bold text-2xl">H</span>
           </div>
           <h1 className="text-3xl font-bold">Create your account</h1>
+          <p className="text-gray-400 mt-2">Join Hulk-Hub today</p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <input
               type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              name="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`w-full bg-black border text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.name ? 'border-red-500' : 'border-gray-700'
+              }`}
             />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
           </div>
+
           <div>
             <input
               type="email"
+              name="email"
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.email}
+              onChange={handleChange}
+              className={`w-full bg-black border text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.email ? 'border-red-500' : 'border-gray-700'
+              }`}
             />
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
+
           <div>
             <input
               type="password"
+              name="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black border border-gray-700 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.password}
+              onChange={handleChange}
+              className={`w-full bg-black border text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.password ? 'border-red-500' : 'border-gray-700'
+              }`}
             />
+            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
           </div>
-          <div className="text-sm text-gray-500">
-            <input type="checkbox" id="terms" name="terms" required />
-            <label htmlFor="terms" className="ml-2">
-              By signing up, you agree to the <Link to="#" className="text-blue-500 hover:underline">Terms of Service</Link> and <Link to="#" className="text-blue-500 hover:underline">Privacy Policy</Link>, including <Link to="#" className="text-blue-500 hover:underline">Cookie Use</Link>.
-            </label>
+
+          <div>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={`w-full bg-black border text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.confirmPassword ? 'border-red-500' : 'border-gray-700'
+              }`}
+            />
+            {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
           </div>
-          <button type="submit" className="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-full hover:bg-blue-600 transition-colors">
-            Sign Up
+
+          <button 
+            type="submit" 
+            disabled={registerMutation.isPending}
+            className="w-full bg-white text-black font-bold py-3 px-4 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 mt-6"
+          >
+            {registerMutation.isPending ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
+        <div className="flex items-center my-6">
+          <hr className="flex-grow border-gray-700" />
+          <span className="mx-4 text-gray-500">or</span>
+          <hr className="flex-grow border-gray-700" />
+        </div>
+
+        <div className="space-y-4">
+          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
+            Sign up with Google
+          </button>
+          <button className="w-full bg-white text-black font-semibold py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-200 transition-colors">
+            Sign up with Apple
+          </button>
+        </div>
+
         <div className="mt-6 text-center text-gray-500">
-          Have an account already?{' '}
+          Already have an account?{' '}
           <Link to="/login" className="text-blue-500 hover:underline">
-            Log in
+            Sign in
           </Link>
         </div>
       </div>
