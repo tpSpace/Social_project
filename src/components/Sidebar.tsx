@@ -2,39 +2,102 @@ import { useEffect, useState } from 'react';
 import { Home, Compass, Bell, Mail, Bookmark, User as UserIcon, MoreHorizontal } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import type { User } from '../types/index';
+import { authService } from '../services/auth.service';
 
 const Sidebar = () => {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Lấy user data từ localStorage thay vì IndexedDB
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
+    const loadUserData = async () => {
       try {
-        const userData = JSON.parse(userStr);
-        // Transform backend user data sang frontend format
-        const transformedUser: User = {
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          username: userData.email.split('@')[0], // Tạm thời dùng email làm username
-          bio: 'Frontend Developer',
-          avatar: 'https://i.pravatar.cc/150?img=1', // Avatar mặc định
-          backgroundAvatar: 'https://picsum.photos/800/200',
-          occupation: 'Developer',
-          location: 'Vietnam',
-          joinDate: '2024',
-          stats: {
-            following: 0,
-            followers: 0
+        // Ưu tiên lấy data từ backend API
+        const response = await authService.getMe();
+        
+        if (response.success && response.data) {
+          const userData = response.data;
+          // Transform backend user data sang frontend format
+          const transformedUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            username: userData.username || userData.email.split('@')[0], // Sử dụng username từ backend hoặc tạo từ email
+            bio: userData.bio || 'Frontend Developer',
+            avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1', // Sử dụng avatar từ backend hoặc mặc định
+            backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+            occupation: userData.occupation || 'Developer',
+            location: userData.location || 'Vietnam',
+            joinDate: userData.joinDate || '2024',
+            stats: {
+              following: 0,
+              followers: 0
+            }
+          };
+          setUser(transformedUser);
+          
+          // Cập nhật localStorage với data mới từ backend
+          localStorage.setItem('user', JSON.stringify(transformedUser));
+        } else {
+          // Fallback: lấy từ localStorage nếu API fail
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            try {
+              const userData = JSON.parse(userStr);
+              const transformedUser: User = {
+                id: userData.id,
+                name: userData.name,
+                email: userData.email,
+                username: userData.username || userData.email.split('@')[0],
+                bio: userData.bio || 'Frontend Developer',
+                avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1',
+                backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+                occupation: userData.occupation || 'Developer',
+                location: userData.location || 'Vietnam',
+                joinDate: userData.joinDate || '2024',
+                stats: {
+                  following: 0,
+                  followers: 0
+                }
+              };
+              setUser(transformedUser);
+            } catch (error) {
+              console.error('Error parsing user data:', error);
+            }
           }
-        };
-        setUser(transformedUser);
+        }
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error('Error loading user data from API:', error);
+        
+        // Fallback to localStorage
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const userData = JSON.parse(userStr);
+            const transformedUser: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              username: userData.username || userData.email.split('@')[0],
+              bio: userData.bio || 'Frontend Developer',
+              avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1',
+              backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+              occupation: userData.occupation || 'Developer',
+              location: userData.location || 'Vietnam',
+              joinDate: userData.joinDate || '2024',
+              stats: {
+                following: 0,
+                followers: 0
+              }
+            };
+            setUser(transformedUser);
+          } catch (error) {
+            console.error('Error parsing user data:', error);
+          }
+        }
       }
-    }
+    };
+
+    loadUserData();
   }, [location]);
 
   const menuItems = [
