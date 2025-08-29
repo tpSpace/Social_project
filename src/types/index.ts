@@ -1,8 +1,6 @@
 export interface Post {
   id: string;
-  title: string;
-  slug: string;
-  content?: string;
+  content: string;
   status: 'DRAFT' | 'PUBLISHED';
   coverId?: string;
   authorId: string;
@@ -13,12 +11,18 @@ export interface Post {
     name: string;
     email: string;
     role: string;
+    username?: string;
+    bio?: string;
+    occupation?: string;
+    location?: string;
+    joinDate?: string;
     avatarId?: {
       _id: string;
       secureUrl: string;
       url?: string;
       filename: string;
     };
+    backgroundAvatar?: string;
   };
   cover?: {
     id: string;

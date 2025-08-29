@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { postsService } from '../services/posts.service';
+import { api } from '../services/api';
 import Timeline from '../components/Timeline';
 import { toast } from 'react-hot-toast';
 import type { Post, User } from '../types';
@@ -63,48 +64,38 @@ const Home = () => {
   const handleNewPost = async (content: string, imageFile?: File) => {
     if (!currentUser) return;
     
-    // Tạo title từ content một cách thông minh
-    let title = content.trim();
-    
-    // Nếu content quá dài, cắt ngắn và thêm "..."
-    if (title.length > 50) {
-      title = title.substring(0, 50).trim() + '...';
-    }
-    
-    // Nếu content rỗng, sử dụng title mặc định
-    if (!title) {
-      title = 'New Post';
-    }
-    
-    // Đảm bảo title và content khác nhau
-    if (title === content) {
-      // Nếu giống hệt, thay đổi title một chút
-      if (content.length > 30) {
-        title = content.substring(0, 30).trim() + '...';
-      } else {
-        title = content + ' - Post';
-      }
-    }
-    
     // Tạo post với hoặc không có image
     if (imageFile) {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('content', content);
-      formData.append('status', 'PUBLISHED');
-      formData.append('cover', imageFile);
-      
-      console.log('Creating post with image:', { title, content, imageFile: imageFile.name });
-      console.log('FormData entries:');
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
+      // Trước tiên upload image để lấy coverId
+      try {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        
+        // Upload image trước
+        const uploadResponse = await api.post('/uploads', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        const uploadData = uploadResponse.data;
+        const coverId = uploadData.data.id;
+        
+        console.log('Image uploaded successfully, coverId:', coverId);
+        
+        // Tạo post với coverId
+        createPostMutation.mutate({
+          content: content,
+          status: 'PUBLISHED',
+          coverId: coverId
+        });
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast.error('Failed to upload image');
       }
-      
-      createPostMutation.mutate(formData);
     } else {
-      console.log('Creating post without image:', { title, content });
+      console.log('Creating post without image:', { content });
       createPostMutation.mutate({
-        title: title,
         content: content,
         status: 'PUBLISHED'
       });
@@ -121,7 +112,6 @@ const Home = () => {
     updatePostMutation.mutate({
       id: updatedPost.id,
       data: {
-        title: updatedPost.title,
         content: updatedPost.content,
         status: 'PUBLISHED'
       }

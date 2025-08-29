@@ -2,9 +2,7 @@ import { api } from './api';
 
 export interface Post {
   id: string;
-  title: string;
-  slug: string;
-  content?: string;
+  content: string;
   status: 'DRAFT' | 'PUBLISHED';
   coverId?: string;
   authorId: string;
@@ -15,12 +13,18 @@ export interface Post {
     name: string;
     email: string;
     role: string;
+    username?: string;
+    bio?: string;
+    occupation?: string;
+    location?: string;
+    joinDate?: string;
     avatarId?: {
       _id: string;
       secureUrl: string;
       url?: string;
       filename: string;
     };
+    backgroundAvatar?: string;
   };
   cover?: {
     id: string;
@@ -33,9 +37,9 @@ export interface Post {
 }
 
 export interface CreatePostData {
-  title: string;
-  content?: string;
+  content: string;
   status?: 'DRAFT' | 'PUBLISHED';
+  coverId?: string;
 }
 
 export const postsService = {
@@ -54,13 +58,13 @@ export const postsService = {
           
           return {
             ...post,
-            handle: post.author?.email?.split('@')[0] || 'user',
+            handle: post.author?.username || post.author?.email?.split('@')[0] || 'user',
             time: new Date(post.createdAt).toLocaleDateString(),
             likes: 0, // TODO: Add from backend
             comments: 0, // TODO: Add from backend
             retweets: 0, // TODO: Add from backend
             avatar: post.author?.avatarId?.secureUrl || post.author?.avatarId?.url || '/default-avatar.png',
-            image: post.cover ? `https://res.cloudinary.com/dyzvxodz2/image/upload/v1/${post.cover.id}` : null, // Corrected Cloudinary URL
+            image: post.cover?.url || post.cover?.secureUrl || null, // Use cover.url from backend
             // Đảm bảo author data được giữ nguyên
             author: post.author || {
               _id: post.authorId?._id || post.authorId,

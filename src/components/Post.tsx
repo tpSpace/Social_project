@@ -83,7 +83,7 @@ const Post: React.FC<PostProps> = ({
 
   // Sử dụng post data đã được transform
   const authorName = post.author?.name || 'Unknown User';
-  const authorHandle = post.handle || post.author?.email?.split('@')[0] || 'unknown';
+  const authorHandle = post.handle || post.author?.username || post.author?.email?.split('@')[0] || 'unknown';
   const postTime = post.time || formatTime(post.createdAt);
   const postAvatar = post.avatar || post.author?.avatarId?.secureUrl || post.author?.avatarId?.url || `https://i.pravatar.cc/150?img=${Math.abs(authorName.charCodeAt(0)) % 10}`;
 
@@ -140,15 +140,14 @@ const Post: React.FC<PostProps> = ({
             </div>
           ) : (
             <div>
-              <h3 className="font-semibold text-white mb-2">{post.title}</h3>
               <p className="text-gray-300 mb-3">{displayContent}</p>
               
-              {/* Cover Image */}
-              {post.cover && (
+              {/* Post Image */}
+              {post.image && (
                 <div className="mb-3">
                   <img
-                    src={post.cover.secureUrl || post.cover.url}
-                    alt={post.cover.filename}
+                    src={post.image}
+                    alt="Post image"
                     className="w-full rounded-lg max-h-96 object-cover"
                   />
                 </div>
