@@ -15,6 +15,12 @@ export interface Post {
     name: string;
     email: string;
     role: string;
+    avatarId?: {
+      _id: string;
+      secureUrl: string;
+      url?: string;
+      filename: string;
+    };
   };
   cover?: {
     id: string;
@@ -53,8 +59,8 @@ export const postsService = {
             likes: 0, // TODO: Add from backend
             comments: 0, // TODO: Add from backend
             retweets: 0, // TODO: Add from backend
-            avatar: post.author?.avatar || '/default-avatar.png',
-            image: post.cover?.secureUrl || post.cover?.url,
+            avatar: post.author?.avatarId?.secureUrl || post.author?.avatarId?.url || '/default-avatar.png',
+            image: post.cover ? `https://res.cloudinary.com/dyzvxodz2/image/upload/v1/${post.cover.id}` : null, // Corrected Cloudinary URL
             // Đảm bảo author data được giữ nguyên
             author: post.author || {
               _id: post.authorId?._id || post.authorId,

@@ -13,6 +13,12 @@ export interface Post {
     name: string;
     email: string;
     role: string;
+    avatarId?: {
+      _id: string;
+      secureUrl: string;
+      url?: string;
+      filename: string;
+    };
   };
   cover?: {
     id: string;

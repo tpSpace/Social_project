@@ -85,7 +85,7 @@ const Post: React.FC<PostProps> = ({
   const authorName = post.author?.name || 'Unknown User';
   const authorHandle = post.handle || post.author?.email?.split('@')[0] || 'unknown';
   const postTime = post.time || formatTime(post.createdAt);
-  const postAvatar = post.avatar || `https://i.pravatar.cc/150?img=${Math.abs(authorName.charCodeAt(0)) % 10}`;
+  const postAvatar = post.avatar || post.author?.avatarId?.secureUrl || post.author?.avatarId?.url || `https://i.pravatar.cc/150?img=${Math.abs(authorName.charCodeAt(0)) % 10}`;
 
   return (
     <article className="p-4 hover:bg-gray-950 transition-colors cursor-pointer">
