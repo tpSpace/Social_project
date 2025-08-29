@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
+import { userService } from '../services/user.service';
 import toast from 'react-hot-toast';
 
 interface User {
@@ -47,7 +48,7 @@ const Profile = () => {
             email: userData.email,
             username: userData.email.split('@')[0], // Tạm thời dùng email làm username
             bio: 'Frontend Developer', // Có thể thêm vào backend sau
-            avatar: 'https://i.pravatar.cc/150?img=1', // Avatar mặc định
+            avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1', // Sử dụng avatar từ backend hoặc mặc định
             backgroundAvatar: 'https://picsum.photos/800/200',
             occupation: 'Developer',
             location: 'Vietnam',
@@ -135,14 +136,32 @@ const Profile = () => {
     e.preventDefault();
     if (editedUser) {
       try {
-        // TODO: Gọi API update user khi backend có endpoint
-        // await authService.updateProfile(editedUser);
+        // Gọi API update user profile
+        const updateData = {
+          name: editedUser.name,
+          bio: editedUser.bio,
+          occupation: editedUser.occupation,
+          location: editedUser.location
+        };
         
-        // Tạm thời lưu vào localStorage
-        localStorage.setItem('user', JSON.stringify(editedUser));
-        setUser(editedUser);
-        setIsEditing(false);
-        toast.success('Profile updated successfully!');
+        const response = await userService.updateProfile(updateData);
+        
+        if (response.success) {
+          // Cập nhật state với data mới từ backend
+          setUser(editedUser);
+          setIsEditing(false);
+          toast.success('Profile updated successfully!');
+          
+          // Cập nhật localStorage với data mới
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            const updatedUser = { ...currentUser, ...updateData };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } else {
+          toast.error(response.error || 'Failed to update profile');
+        }
       } catch (error) {
         console.error('Error updating profile:', error);
         toast.error('Failed to update profile');
@@ -157,25 +176,60 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditedUser({ ...editedUser, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      
+      try {
+        // Upload avatar lên backend
+        const response = await userService.uploadAvatar(file);
+        
+        if (response.success && response.data?.user?.avatarUrl) {
+          // Cập nhật avatar với URL từ backend
+          const newAvatar = response.data.user.avatarUrl;
+          setEditedUser({ ...editedUser, avatar: newAvatar });
+          
+          // Cập nhật localStorage
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            currentUser.avatar = newAvatar;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+          }
+          
+          toast.success('Avatar updated successfully!');
+        } else {
+          toast.error('Failed to upload avatar');
+        }
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+        toast.error('Failed to upload avatar');
+      }
     }
   };
 
-  const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditedUser({ ...editedUser, backgroundAvatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      
+      try {
+        // Upload background image lên backend
+        // Tạm thời dùng uploadAvatar endpoint (có thể cần tạo endpoint riêng cho background)
+        const response = await userService.uploadAvatar(file);
+        
+        if (response.success && response.data?.avatar) {
+          // Cập nhật background với URL từ backend
+          const newBackground = response.data.avatar;
+          setEditedUser({ ...editedUser, backgroundAvatar: newBackground });
+          
+          toast.success('Background updated successfully!');
+        } else {
+          toast.error('Failed to upload background');
+        }
+      } catch (error) {
+        console.error('Error uploading background:', error);
+        toast.error('Failed to upload background');
+      }
     }
   };
 
