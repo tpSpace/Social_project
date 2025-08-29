@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { userService } from '../services/user.service';
+import { api } from '../services/api';
 import toast from 'react-hot-toast';
 
 interface User {
@@ -46,13 +47,13 @@ const Profile = () => {
             id: userData.id,
             name: userData.name,
             email: userData.email,
-            username: userData.email.split('@')[0], // Tạm thời dùng email làm username
-            bio: 'Frontend Developer', // Có thể thêm vào backend sau
+            username: userData.username || userData.email.split('@')[0], // Lấy từ backend hoặc fallback
+            bio: userData.bio || '', // Lấy từ backend
             avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1', // Sử dụng avatar từ backend hoặc mặc định
-            backgroundAvatar: 'https://picsum.photos/800/200',
-            occupation: 'Developer',
-            location: 'Vietnam',
-            joinDate: '2024',
+            backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200', // Lấy từ backend
+            occupation: userData.occupation || '', // Lấy từ backend
+            location: userData.location || '', // Lấy từ backend
+            joinDate: userData.joinDate || new Date().getFullYear().toString(), // Lấy từ backend
             stats: {
               following: 0,
               followers: 0
@@ -70,13 +71,13 @@ const Profile = () => {
               id: userData.id || Date.now().toString(),
               name: userData.name,
               email: userData.email,
-              username: userData.email.split('@')[0],
-              bio: 'Frontend Developer',
-              avatar: 'https://i.pravatar.cc/150?img=1',
-              backgroundAvatar: 'https://picsum.photos/800/200',
-              occupation: 'Developer',
-              location: 'Vietnam',
-              joinDate: '2024',
+              username: userData.username || userData.email.split('@')[0],
+              bio: userData.bio || '',
+              avatar: userData.avatar || 'https://i.pravatar.cc/150?img=1',
+              backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+              occupation: userData.occupation || '',
+              location: userData.location || '',
+              joinDate: userData.joinDate || new Date().getFullYear().toString(),
               stats: {
                 following: 0,
                 followers: 0
@@ -86,8 +87,18 @@ const Profile = () => {
             setEditedUser(fallbackUser);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading user data:', error);
+        
+        // Nếu 401, redirect to login
+        if (error.response?.status === 401) {
+          toast.error('Session expired, please login again');
+          localStorage.removeItem('user');
+          localStorage.removeItem('isAuthenticated');
+          navigate('/login');
+          return;
+        }
+        
         toast.error('Failed to load profile data');
         
         // Fallback to localStorage
@@ -98,13 +109,13 @@ const Profile = () => {
             id: userData.id || Date.now().toString(),
             name: userData.name,
             email: userData.email,
-            username: userData.email.split('@')[0],
-            bio: 'Frontend Developer',
-            avatar: 'https://i.pravatar.cc/150?img=1',
-            backgroundAvatar: 'https://picsum.photos/800/200',
-            occupation: 'Developer',
-            location: 'Vietnam',
-            joinDate: '2024',
+            username: userData.username || userData.email.split('@')[0],
+            bio: userData.bio || '',
+            avatar: userData.avatar || 'https://i.pravatar.cc/150?img=1',
+            backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+            occupation: userData.occupation || '',
+            location: userData.location || '',
+            joinDate: userData.joinDate || new Date().getFullYear().toString(),
             stats: {
               following: 0,
               followers: 0
@@ -141,7 +152,9 @@ const Profile = () => {
           name: editedUser.name,
           bio: editedUser.bio,
           occupation: editedUser.occupation,
-          location: editedUser.location
+          location: editedUser.location,
+          username: editedUser.username,
+          joinDate: editedUser.joinDate
         };
         
         const response = await userService.updateProfile(updateData);
@@ -212,24 +225,85 @@ const Profile = () => {
     if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
       
+      console.log('🖼️ [BACKGROUND] File selected:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
       try {
-        // Upload background image lên backend
-        // Tạm thời dùng uploadAvatar endpoint (có thể cần tạo endpoint riêng cho background)
-        const response = await userService.uploadAvatar(file);
+        console.log('📤 [BACKGROUND] Starting upload...');
         
-        if (response.success && response.data?.avatar) {
+        // Upload background image lên uploads chung
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        console.log('📋 [BACKGROUND] FormData created:', formData);
+        
+        const response = await api.post('/uploads', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        console.log('📥 [BACKGROUND] Upload response:', response.data);
+        console.log('📋 [BACKGROUND] Response data structure:', {
+          success: response.data.success,
+          data: response.data.data,
+          hasUrl: !!response.data.data?.url,
+          hasSecureUrl: !!response.data.data?.secureUrl,
+          dataKeys: response.data.data ? Object.keys(response.data.data) : []
+        });
+        
+        if (response.data.success && response.data.data?.url) {
+          console.log('✅ [BACKGROUND] Upload successful!');
+          
           // Cập nhật background với URL từ backend
-          const newBackground = response.data.avatar;
+          const newBackground = response.data.data.url;
+          console.log('🔗 [BACKGROUND] New background URL:', newBackground);
+          
           setEditedUser({ ...editedUser, backgroundAvatar: newBackground });
+          console.log('🔄 [BACKGROUND] Local state updated');
+          
+          // Cập nhật localStorage
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            currentUser.backgroundAvatar = newBackground;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            console.log('💾 [BACKGROUND] LocalStorage updated');
+          }
           
           toast.success('Background updated successfully!');
+          
+          // Cập nhật background vào database
+          console.log('💾 [BACKGROUND] Updating profile in database...');
+          try {
+            const updateResponse = await userService.updateProfile({
+              backgroundAvatar: newBackground
+            });
+            
+            console.log('✅ [BACKGROUND] Profile update response:', updateResponse);
+            toast.success('Background updated and saved to profile!');
+          } catch (updateError) {
+            console.error('❌ [BACKGROUND] Error updating profile:', updateError);
+            toast.error('Background uploaded but failed to save to profile');
+          }
         } else {
+          console.error('❌ [BACKGROUND] Upload response invalid:', response.data);
           toast.error('Failed to upload background');
         }
-      } catch (error) {
-        console.error('Error uploading background:', error);
+      } catch (error: any) {
+        console.error('❌ [BACKGROUND] Error uploading background:', error);
+        console.error('❌ [BACKGROUND] Error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
         toast.error('Failed to upload background');
       }
+    } else {
+      console.log('⚠️ [BACKGROUND] No file selected or editedUser not available');
     }
   };
 
@@ -365,7 +439,10 @@ const Profile = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>
-                  Joined {new Date(user.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  Joined {user.joinDate && user.joinDate.length === 4 ? 
+                    `${user.joinDate}` : 
+                    new Date(user.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  }
                 </span>
               </div>
             </div>
@@ -443,14 +520,17 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="joinDate" className="block text-xl font-medium">Join Date</label>
+                  <label htmlFor="joinDate" className="block text-xl font-medium">Join Year</label>
                   <input
-                    type="date"
+                    type="number"
                     id="joinDate"
                     name="joinDate"
+                    min="1900"
+                    max="2030"
                     value={editedUser.joinDate}
                     onChange={handleChange}
                     className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="2024"
                   />
                 </div>
               </form>

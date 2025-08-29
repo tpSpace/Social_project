@@ -22,6 +22,9 @@ export interface UpdateProfileData {
   bio?: string;
   occupation?: string;
   location?: string;
+  username?: string;
+  joinDate?: string;
+  backgroundAvatar?: string;
 }
 
 export const userService = {
