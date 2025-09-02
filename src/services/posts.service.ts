@@ -112,11 +112,33 @@ export const postsService = {
       } else {
         // Xử lý post không có image
         console.log('Creating post without image:', data);
-        response = await api.post('/posts', data);
+        
+        // Validate data before sending
+        const postData = {
+          content: data.content,
+          status: data.status || 'PUBLISHED',
+          ...(data.coverId && { coverId: data.coverId })
+        };
+        
+        console.log('Sending post data:', postData);
+        response = await api.post('/posts', postData);
       }
       
       return response.data;
     } catch (error: any) {
+      // Log detailed error information
+      console.error('Detailed error creating post:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
       // Nếu token hết hạn, thử refresh
       if (error.response?.status === 401) {
         console.log('Token expired, trying to refresh...');
@@ -129,7 +151,12 @@ export const postsService = {
           if (data instanceof FormData) {
             response = await api.post('/posts', data);
           } else {
-            response = await api.post('/posts', data);
+            const postData = {
+              content: data.content,
+              status: data.status || 'PUBLISHED',
+              ...(data.coverId && { coverId: data.coverId })
+            };
+            response = await api.post('/posts', postData);
           }
           
           console.log('Post created successfully after refresh:', response.data);
