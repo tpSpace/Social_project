@@ -1,4 +1,4 @@
-# 🌟 Social Media Platform - Fronten
+# 🌟 Social Media Platform - Frontend
 
 A modern, responsive social media application built with React, TypeScript, and Tailwind CSS. This frontend provides a Twitter-like interface with real-time interactions, image uploads, and user authentication.
 
