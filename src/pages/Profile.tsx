@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, updateUser } from '../utils/db';
+import { authService } from '../services/auth.service';
+import { userService } from '../services/user.service';
+import { api } from '../services/api';
 import toast from 'react-hot-toast';
 
 interface User {
-  id?: number;
+  id: string;
   name: string;
   email: string;
   username: string;
@@ -24,17 +26,110 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [editedUser, setEditedUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      setEditedUser(currentUser);
-    }
+    const loadUserData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Lấy user data từ backend API
+        const response = await authService.getMe();
+        
+        if (response.success && response.data) {
+          // Transform backend user data sang frontend format
+          const userData = response.data;
+          const transformedUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            username: userData.username || userData.email.split('@')[0], // Lấy từ backend hoặc fallback
+            bio: userData.bio || '', // Lấy từ backend
+            avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1', // Sử dụng avatar từ backend hoặc mặc định
+            backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200', // Lấy từ backend
+            occupation: userData.occupation || '', // Lấy từ backend
+            location: userData.location || '', // Lấy từ backend
+            joinDate: userData.joinDate || new Date().getFullYear().toString(), // Lấy từ backend
+            stats: {
+              following: 0,
+              followers: 0
+            }
+          };
+          
+          setUser(transformedUser);
+          setEditedUser(transformedUser);
+        } else {
+          // Fallback: lấy từ localStorage nếu API fail
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userData = JSON.parse(userStr);
+            const fallbackUser: User = {
+              id: userData.id || Date.now().toString(),
+              name: userData.name,
+              email: userData.email,
+              username: userData.username || userData.email.split('@')[0],
+              bio: userData.bio || '',
+              avatar: userData.avatar || 'https://i.pravatar.cc/150?img=1',
+              backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+              occupation: userData.occupation || '',
+              location: userData.location || '',
+              joinDate: userData.joinDate || new Date().getFullYear().toString(),
+              stats: {
+                following: 0,
+                followers: 0
+              }
+            };
+            setUser(fallbackUser);
+            setEditedUser(fallbackUser);
+          }
+        }
+      } catch (error: any) {
+        console.error('Error loading user data:', error);
+        
+        // Nếu 401, redirect to login
+        if (error.response?.status === 401) {
+          toast.error('Session expired, please login again');
+          localStorage.removeItem('user');
+          localStorage.removeItem('isAuthenticated');
+          navigate('/login');
+          return;
+        }
+        
+        toast.error('Failed to load profile data');
+        
+        // Fallback to localStorage
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userData = JSON.parse(userStr);
+          const fallbackUser: User = {
+            id: userData.id || Date.now().toString(),
+            name: userData.name,
+            email: userData.email,
+            username: userData.username || userData.email.split('@')[0],
+            bio: userData.bio || '',
+            avatar: userData.avatar || 'https://i.pravatar.cc/150?img=1',
+            backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+            occupation: userData.occupation || '',
+            location: userData.location || '',
+            joinDate: userData.joinDate || new Date().getFullYear().toString(),
+            stats: {
+              following: 0,
+              followers: 0
+            }
+          };
+          setUser(fallbackUser);
+          setEditedUser(fallbackUser);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
   }, []);
 
   const handleEdit = () => {
@@ -51,11 +146,39 @@ const Profile = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editedUser) {
-      await updateUser(editedUser);
-      localStorage.setItem('user', JSON.stringify(editedUser));
-      setUser(editedUser);
-      setIsEditing(false);
-      toast.success('Profile updated successfully!');
+      try {
+        // Gọi API update user profile
+        const updateData = {
+          name: editedUser.name,
+          bio: editedUser.bio,
+          occupation: editedUser.occupation,
+          location: editedUser.location,
+          username: editedUser.username,
+          joinDate: editedUser.joinDate
+        };
+        
+        const response = await userService.updateProfile(updateData);
+        
+        if (response.success) {
+          // Cập nhật state với data mới từ backend
+          setUser(editedUser);
+          setIsEditing(false);
+          toast.success('Profile updated successfully!');
+          
+          // Cập nhật localStorage với data mới
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            const updatedUser = { ...currentUser, ...updateData };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } else {
+          toast.error(response.error || 'Failed to update profile');
+        }
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        toast.error('Failed to update profile');
+      }
     }
   };
 
@@ -66,36 +189,158 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditedUser({ ...editedUser, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      
+      try {
+        // Upload avatar lên backend
+        const response = await userService.uploadAvatar(file);
+        
+        if (response.success && response.data?.user?.avatarUrl) {
+          // Cập nhật avatar với URL từ backend
+          const newAvatar = response.data.user.avatarUrl;
+          setEditedUser({ ...editedUser, avatar: newAvatar });
+          
+          // Cập nhật localStorage
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            currentUser.avatar = newAvatar;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+          }
+          
+          toast.success('Avatar updated successfully!');
+        } else {
+          toast.error('Failed to upload avatar');
+        }
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+        toast.error('Failed to upload avatar');
+      }
     }
   };
 
-  const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && editedUser) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditedUser({ ...editedUser, backgroundAvatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      
+      console.log('🖼️ [BACKGROUND] File selected:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
+      try {
+        console.log('📤 [BACKGROUND] Starting upload...');
+        
+        // Upload background image lên uploads chung
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        console.log('📋 [BACKGROUND] FormData created:', formData);
+        
+        const response = await api.post('/uploads', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        console.log('📥 [BACKGROUND] Upload response:', response.data);
+        console.log('📋 [BACKGROUND] Response data structure:', {
+          success: response.data.success,
+          data: response.data.data,
+          hasUrl: !!response.data.data?.url,
+          hasSecureUrl: !!response.data.data?.secureUrl,
+          dataKeys: response.data.data ? Object.keys(response.data.data) : []
+        });
+        
+        if (response.data.success && response.data.data?.url) {
+          console.log('✅ [BACKGROUND] Upload successful!');
+          
+          // Cập nhật background với URL từ backend
+          const newBackground = response.data.data.url;
+          console.log('🔗 [BACKGROUND] New background URL:', newBackground);
+          
+          setEditedUser({ ...editedUser, backgroundAvatar: newBackground });
+          console.log('🔄 [BACKGROUND] Local state updated');
+          
+          // Cập nhật localStorage
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            const currentUser = JSON.parse(currentUserStr);
+            currentUser.backgroundAvatar = newBackground;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            console.log('💾 [BACKGROUND] LocalStorage updated');
+          }
+          
+          toast.success('Background updated successfully!');
+          
+          // Cập nhật background vào database
+          console.log('💾 [BACKGROUND] Updating profile in database...');
+          try {
+            const updateResponse = await userService.updateProfile({
+              backgroundAvatar: newBackground
+            });
+            
+            console.log('✅ [BACKGROUND] Profile update response:', updateResponse);
+            toast.success('Background updated and saved to profile!');
+          } catch (updateError) {
+            console.error('❌ [BACKGROUND] Error updating profile:', updateError);
+            toast.error('Background uploaded but failed to save to profile');
+          }
+        } else {
+          console.error('❌ [BACKGROUND] Upload response invalid:', response.data);
+          toast.error('Failed to upload background');
+        }
+      } catch (error: any) {
+        console.error('❌ [BACKGROUND] Error uploading background:', error);
+        console.error('❌ [BACKGROUND] Error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+        toast.error('Failed to upload background');
+      }
+    } else {
+      console.log('⚠️ [BACKGROUND] No file selected or editedUser not available');
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     toast.success('Logout successful!');
     navigate('/login');
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user || !editedUser) {
-    return <div>Loading...</div>; // Or a more sophisticated loading state
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">Failed to load profile data</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -194,18 +439,21 @@ const Profile = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>
-                  Joined {new Date(user.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  Joined {user.joinDate && user.joinDate.length === 4 ? 
+                    `${user.joinDate}` : 
+                    new Date(user.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  }
                 </span>
               </div>
             </div>
 
             <div className="mt-4 flex justify-start space-x-8">
               <div className="text-center flex">
-                <p className="font-bold text-lg">{user.stats.following}</p>
+                <p className="font-bold text-lg">{user.stats?.following || 0}</p>
                 <p className="text-gray-400 text-lg ml-1">Following</p>
               </div>
               <div className="text-center flex">
-                <p className="font-bold text-lg">{user.stats.followers}</p>
+                <p className="font-bold text-lg">{user.stats?.followers || 0}</p>
                 <p className="text-gray-400 text-lg ml-1">Followers</p>
               </div>
             </div>
@@ -272,14 +520,17 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="joinDate" className="block text-xl font-medium">Join Date</label>
+                  <label htmlFor="joinDate" className="block text-xl font-medium">Join Year</label>
                   <input
-                    type="date"
+                    type="number"
                     id="joinDate"
                     name="joinDate"
+                    min="1900"
+                    max="2030"
                     value={editedUser.joinDate}
                     onChange={handleChange}
                     className="mt-1 block w-full px-3 py-3 transition-color duration-200 bg-gray-800 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="2024"
                   />
                 </div>
               </form>

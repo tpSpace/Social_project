@@ -1,34 +1,103 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Home, Compass, Bell, Mail, Bookmark, User as UserIcon, MoreHorizontal } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { getCurrentUser } from '../utils/db';
-
-interface User {
-  id?: number;
-  name: string;
-  email: string;
-  username: string;
-  bio: string;
-  avatar: string;
-  backgroundAvatar: string;
-  occupation: string;
-  location: string;
-  joinDate: string;
-  stats: {
-    following: number;
-    followers: number;
-  };
-}
+import type { User } from '../types/index';
+import { authService } from '../services/auth.service';
 
 const Sidebar = () => {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
+    const loadUserData = async () => {
+      try {
+        // Ưu tiên lấy data từ backend API
+        const response = await authService.getMe();
+        
+        if (response.success && response.data) {
+          const userData = response.data;
+          // Transform backend user data sang frontend format
+          const transformedUser: User = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            username: userData.username || userData.email.split('@')[0], // Sử dụng username từ backend hoặc tạo từ email
+            bio: userData.bio || 'Frontend Developer',
+            avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1', // Sử dụng avatar từ backend hoặc mặc định
+            backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+            occupation: userData.occupation || 'Developer',
+            location: userData.location || 'Vietnam',
+            joinDate: userData.joinDate || '2024',
+            stats: {
+              following: 0,
+              followers: 0
+            }
+          };
+          setUser(transformedUser);
+          
+          // Cập nhật localStorage với data mới từ backend
+          localStorage.setItem('user', JSON.stringify(transformedUser));
+        } else {
+          // Fallback: lấy từ localStorage nếu API fail
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            try {
+              const userData = JSON.parse(userStr);
+              const transformedUser: User = {
+                id: userData.id,
+                name: userData.name,
+                email: userData.email,
+                username: userData.username || userData.email.split('@')[0],
+                bio: userData.bio || 'Frontend Developer',
+                avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1',
+                backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+                occupation: userData.occupation || 'Developer',
+                location: userData.location || 'Vietnam',
+                joinDate: userData.joinDate || '2024',
+                stats: {
+                  following: 0,
+                  followers: 0
+                }
+              };
+              setUser(transformedUser);
+            } catch (error) {
+              console.error('Error parsing user data:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data from API:', error);
+        
+        // Fallback to localStorage
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const userData = JSON.parse(userStr);
+            const transformedUser: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              username: userData.username || userData.email.split('@')[0],
+              bio: userData.bio || 'Frontend Developer',
+              avatar: userData.avatar?.url || 'https://i.pravatar.cc/150?img=1',
+              backgroundAvatar: userData.backgroundAvatar || 'https://picsum.photos/800/200',
+              occupation: userData.occupation || 'Developer',
+              location: userData.location || 'Vietnam',
+              joinDate: userData.joinDate || '2024',
+              stats: {
+                following: 0,
+                followers: 0
+              }
+            };
+            setUser(transformedUser);
+          } catch (error) {
+            console.error('Error parsing user data:', error);
+          }
+        }
+      }
+    };
+
+    loadUserData();
   }, [location]);
 
   const menuItems = [
