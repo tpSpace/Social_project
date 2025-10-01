@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Home,
   Compass,
@@ -8,118 +7,27 @@ import {
   User as UserIcon,
   MoreHorizontal,
   LogOut,
-  Wallet,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAccount, useDisconnect } from "wagmi";
 import { useAuth } from "../providers/AuthProvider";
-import type { User } from "../types/index";
-import { authService } from "../services/auth.service";
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
   const { logout } = useAuth();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        // Ưu tiên lấy data từ backend API
-        const response = await authService.getMe();
+  // Hardcoded user data
+  const user = {
+    id: "1",
+    name: "John Doe",
+    username: "johndoe",
+    avatar: "https://i.pravatar.cc/150?img=1",
+  };
 
-        if (response.success && response.data) {
-          const userData = response.data;
-          // Transform backend user data sang frontend format
-          const transformedUser: User = {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            username: userData.username || userData.email.split("@")[0], // Sử dụng username từ backend hoặc tạo từ email
-            bio: userData.bio || "Frontend Developer",
-            avatar: userData.avatar?.url || "https://i.pravatar.cc/150?img=1", // Sử dụng avatar từ backend hoặc mặc định
-            backgroundAvatar:
-              userData.backgroundAvatar || "https://picsum.photos/800/200",
-            occupation: userData.occupation || "Developer",
-            location: userData.location || "Vietnam",
-            joinDate: userData.joinDate || "2024",
-            stats: {
-              following: 0,
-              followers: 0,
-            },
-          };
-          setUser(transformedUser);
-
-          // Cập nhật localStorage với data mới từ backend
-          localStorage.setItem("user", JSON.stringify(transformedUser));
-        } else {
-          // Fallback: lấy từ localStorage nếu API fail
-          const userStr = localStorage.getItem("user");
-          if (userStr) {
-            try {
-              const userData = JSON.parse(userStr);
-              const transformedUser: User = {
-                id: userData.id,
-                name: userData.name,
-                email: userData.email,
-                username: userData.username || userData.email.split("@")[0],
-                bio: userData.bio || "Frontend Developer",
-                avatar:
-                  userData.avatar?.url || "https://i.pravatar.cc/150?img=1",
-                backgroundAvatar:
-                  userData.backgroundAvatar || "https://picsum.photos/800/200",
-                occupation: userData.occupation || "Developer",
-                location: userData.location || "Vietnam",
-                joinDate: userData.joinDate || "2024",
-                stats: {
-                  following: 0,
-                  followers: 0,
-                },
-              };
-              setUser(transformedUser);
-            } catch (error) {
-              console.error("Error parsing user data:", error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error loading user data from API:", error);
-
-        // Fallback to localStorage
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-          try {
-            const userData = JSON.parse(userStr);
-            const transformedUser: User = {
-              id: userData.id,
-              name: userData.name,
-              email: userData.email,
-              username: userData.username || userData.email.split("@")[0],
-              bio: userData.bio || "Frontend Developer",
-              avatar: userData.avatar?.url || "https://i.pravatar.cc/150?img=1",
-              backgroundAvatar:
-                userData.backgroundAvatar || "https://picsum.photos/800/200",
-              occupation: userData.occupation || "Developer",
-              location: userData.location || "Vietnam",
-              joinDate: userData.joinDate || "2024",
-              stats: {
-                following: 0,
-                followers: 0,
-              },
-            };
-            setUser(transformedUser);
-          } catch (error) {
-            console.error("Error parsing user data:", error);
-          }
-        }
-      }
-    };
-
-    loadUserData();
-  }, [location]);
-
+  // Twitter-like menu items
   const menuItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Compass, label: "Explore", path: "/explore" },
@@ -147,12 +55,12 @@ const Sidebar = () => {
             <li key={index}>
               <Link
                 to={item.path}
-                className={`flex items-center space-x-4 px-3 py-3 rounded-full hover:bg-gray-900 transition-colors ${
+                className={`flex items-center space-x-4 px-3 py-3 rounded-full hover:bg-gray-900 transition-colors text-white ${
                   location.pathname === item.path ? "font-bold" : ""
                 }`}
               >
                 <item.icon size={26} />
-                <span className="text-xl hidden xl:block">{item.label}</span>
+                <span className="text-xl xl:block">{item.label}</span>
               </Link>
             </li>
           ))}
@@ -188,26 +96,24 @@ const Sidebar = () => {
       {/* User Profile */}
       <div className="pt-4">
         <Link to="/profile">
-          {user && (
-            <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
-              <div className="flex items-center space-x-3">
-                <img
-                  src={user.avatar}
-                  alt="Avatar"
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div className="hidden xl:block">
-                  <div className="font-bold">{user.name}</div>
-                  <div className="text-gray-500 text-sm">
-                    {address
-                      ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                      : `@${user.username}`}
-                  </div>
+          <div className="flex items-center justify-between p-3 rounded-full hover:bg-gray-900 cursor-pointer w-full">
+            <div className="flex items-center space-x-3">
+              <img
+                src={user.avatar}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div className="hidden xl:block">
+                <div className="font-bold">{user.name}</div>
+                <div className="text-gray-500 text-sm">
+                  {address
+                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                    : `@${user.username}`}
                 </div>
               </div>
-              <Wallet className="hidden xl:block text-green-400" size={20} />
             </div>
-          )}
+            <MoreHorizontal className="hidden xl:block" size={20} />
+          </div>
         </Link>
       </div>
     </div>
