@@ -1,23 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 
 const PrivateRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
-      const user = localStorage.getItem('user');
-      const isAuth = localStorage.getItem('isAuthenticated');
-      
-      if (user && isAuth === 'true') {
+      const user = localStorage.getItem("user");
+      const isAuth = localStorage.getItem("isAuthenticated");
+
+      if (user && isAuth === "true") {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
         // Clear any invalid data
-        localStorage.removeItem('user');
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem("user");
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("walletAddress");
       }
     };
 
